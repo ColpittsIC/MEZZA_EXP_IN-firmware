@@ -1,0 +1,3583 @@
+{
+  "disclaimer": "Do not modify this file as it is used by STM32CubeMX2 to determine what and how to update your project with new configuration",
+  "version": "1.0.0",
+  "timestamp": "2026-08-13T09:05:03.654Z",
+  "files": [
+    {
+      "fileGroup": "project_file",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5cb4e8f3886e9097c50577a604827070b2a180781bb5497b0adb03136171436d"
+      },
+      "file": "CMakeLists.txt"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e1607b8b571cd50c9d99670f6629826fd09c6d9d4fa8644bca371d29f91d5378"
+      },
+      "file": "CMakePresets.json"
+    },
+    {
+      "fileGroup": "user_code",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5cb6ac766dc2a71be2e094b6e92b77158d382db62b03f852ba2ce751630b6cb9"
+      },
+      "file": "main.c"
+    },
+    {
+      "fileGroup": "user_code",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "36b0951f773375f65a05aae8a8e24187e8ccae7ce6a053539612f1c012f2dcc9"
+      },
+      "file": "main.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "22f0d9661aaccbe6a33333cd6623368b9a9346ea54eb0bb22ae256253c746190"
+      },
+      "file": "cmake/components.cmake"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "88429a39e9c6d25653794507ebb6b956eb0dd63879457ba8300287421eaa0f07"
+      },
+      "file": "cmake/files.cmake"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "14f0b42cb64d9ee63cf08f5e436424d4a590ff9a86ab3d0e7236f406771ebfd7"
+      },
+      "file": "cmake/flags.cmake"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4dd88fc36774ef644dd867b2363cd1f8e52e8e0320c67c1deef0c3bb0bd2eb24"
+      },
+      "file": "cmake/GCC.14.3.1.cmake"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8a9f07a4171fdf2957af14a8e5725b2c7be18870d152c63af2d0a0ca3b83256d"
+      },
+      "file": "cmake/target.cmake"
+    },
+    {
+      "fileGroup": "project_file",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "926c9c6493751a5b4706a022c03fa3457f6e0637dbc90d4b4d1acd77aad6bd84"
+      },
+      "file": "stm32c5xx_dfp/CMakeLists.txt"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "db8017ed6c3f46e7d8834255011b1e8e4051aaed5f3c1dd92423dbf3e46f0023"
+      },
+      "file": "stm32c5xx_dfp/LICENSE.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a383824274727ca0b6674fe0edefe781fb66d6f35d3c9bf33ac0eb92bedda106"
+      },
+      "file": "stm32c5xx_dfp/README.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "fc9afc444a9c72d4d88d90f41808fe9a6623f71b28dd07c4a36505c396d2d036"
+      },
+      "file": "stm32c5xx_dfp/Release_Notes.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5d1abc46166cef65035c19f3cd6bf8380eb7dd9035589e93aedc615d95322901"
+      },
+      "file": "stm32c5xx_dfp/RTE_Components.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ab1892d2a44b5eeb6a5519940488eace773cb47e1271b4d9d5cc83d40ea07c46"
+      },
+      "file": "stm32c5xx_dfp/SW_Security_Level.md"
+    },
+    {
+      "fileGroup": "project_file",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6d488750f8be92e087ebd76b27e18a9269c462638609673e82ed1bfb5276aa09"
+      },
+      "file": "stm32c5xx_drivers/CMakeLists.txt"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3816de5144023aae9f8e8a480282296afba114394b1f395c27cb79124778ffb2"
+      },
+      "file": "stm32c5xx_drivers/LICENSE.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "69e4807f24258d831a4b7be46ef3895035d9c5cadb0e63b3df8a21468b986f2e"
+      },
+      "file": "stm32c5xx_drivers/README.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "01549dce0ccd83d53a2ab9158197875dea328b9dfed7d8ba4229100f57d12675"
+      },
+      "file": "stm32c5xx_drivers/Release_Notes.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b4ac0644dde592cb7256e871d6bbb73b86ceaf9b9ca45a623db6abb083135bb6"
+      },
+      "file": "stm32c5xx_drivers/SW_Security_Level.md"
+    },
+    {
+      "fileGroup": "project_file",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "faedf0edf576e9db19adb5bdc1b16b80001f2d11ead7c6b81415cdd84dfc8930"
+      },
+      "file": "arch/cmsis/CMakeLists.txt"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5589a73bc0dfffb50dbcb848ee942c0715c985c7250819dba76040d073bf9c9f"
+      },
+      "file": "arch/cmsis/LICENSE.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ddba570eb0865a9f0912dc890599a694a7961ed13c663fc82a36839276852808"
+      },
+      "file": "arch/cmsis/SW_Security_Level.md"
+    },
+    {
+      "fileGroup": "project_file",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4339511c653fa6f96a6f491a1ac5805387852315dfc39b47340be50660bdc60f"
+      },
+      "file": "generated/hal/CMakeLists.txt"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ce51560a7159c62e8f9c5ab4d7f49ac6126d0bced6a2328d70ff91e5bbfac7b7"
+      },
+      "file": "generated/hal/mx_adc1.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3c69f137aa2f03276f2d9401594b2dd685a12cbd7e6344bf8c8d9a14692f42a8"
+      },
+      "file": "generated/hal/mx_adc1.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "673bb15ceb52edd32503b24672f261a025592f7c8dc446f4ad8323a985d86795"
+      },
+      "file": "generated/hal/mx_adc2.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d99e9821c1517f5b79d69daa692ac6c06af0349be54823c53e7e82b0077e9229"
+      },
+      "file": "generated/hal/mx_adc2.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "00a278fdc804baee014100b03d0b91599d4fea881e56225c1de36bf136d36118"
+      },
+      "file": "generated/hal/mx_cortex_mpu.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6f9070dce91d7c60e5c92ece364056d973965ab8297f5569f3bf25c98c92bc6d"
+      },
+      "file": "generated/hal/mx_cortex_mpu.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a8ee336a83ec6073493ffbde0afacc278fbba156a6d4a3bf1728bb431931016e"
+      },
+      "file": "generated/hal/mx_cortex_nvic.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "78136498c2f9ca5730b7dc450b24a1c69ba4c09021644287d1fa0a393ad1a0ae"
+      },
+      "file": "generated/hal/mx_cortex_nvic.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2b1985fcb767187ef1ef4646c1ceb1841db19ab6d54841c910e6244653bc1d04"
+      },
+      "file": "generated/hal/mx_def.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ac77a5182f9f741fba1c7174c4e9b3e6e24788bba6280700f365705e3728c90a"
+      },
+      "file": "generated/hal/mx_hal_def.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "856e4f0b2a0a56a10d967d52cb3e5d44920631e059b3ed4f0c39fc8f0cc1146d"
+      },
+      "file": "generated/hal/mx_icache.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7f48d50e1012f5314960435efd87b0512dab6373c65ba2936a4fe99b8303f029"
+      },
+      "file": "generated/hal/mx_icache.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e617712f909e27e94a6197f1c47bca77fda5d6a3baa1646791a8ab7831ed1686"
+      },
+      "file": "generated/hal/mx_rcc.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "32875f5dd444e62d2194432736c134d6ac81a28eae921b3be53081e0443586c9"
+      },
+      "file": "generated/hal/mx_rcc.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c16d1d625a67401bbb77f0fcad77cae560c05a104073909f3b30af6c98f727aa"
+      },
+      "file": "generated/hal/mx_stm32c5xx_hal_drivers_license.md"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "806cfe863d25b729da97b38a388555ec25245b48586a504d9587bdcf1ceef3af"
+      },
+      "file": "generated/hal/mx_system.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f43ae2066645f0e4b27feea7b7a59cd416cf85887e7b66fb52b619801f2bcd70"
+      },
+      "file": "generated/hal/mx_system.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "092ce0923809b84b6cc1b29bb2f292319b3f40324ebd395d0c57b39ab74b088c"
+      },
+      "file": "generated/hal/mx_uart5.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "55d4763563c32c843e32485818509f545e6d7bdd21b53f3831d58eaaa88e9a39"
+      },
+      "file": "generated/hal/mx_uart5.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b68e05b63af1111cf0982fb0cff384e229e3b89da3075ac44802ae882f819fdf"
+      },
+      "file": "generated/hal/Pre_Include_Global.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "30159a7c7a891477a16f31191a34fe9e1392a52d8fe0f48df381463198d6b01d"
+      },
+      "file": "generated/hal/stm32c5xx_hal_conf.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0957cf13f3dfc4e6eb2192a9a4a37c1f99d7f320d28f241268d2059a8b7bbfe3"
+      },
+      "file": "generated/hal/stm32_external_env.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0374b68b67cae2d5f5043ee3a701f6c42215bee821bc07d61b5e2f5e1384b965"
+      },
+      "file": "generated/hal/STM32_HAL_Driver_codegen.cmake"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8eba3e552e73cba3c74664ed4914f701e72b250be59faab71025009d43b1e526"
+      },
+      "file": "generated/hal/STM32_HAL_Driver_codegen.gpdsc"
+    },
+    {
+      "fileGroup": "project_file",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "98fa5a267933e124c4a494f79e4a7cecedb00010510852ca35b037d42a5d8432"
+      },
+      "file": "generated/utilities/CMakeLists.txt"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4c55823755465daec4e30d95b3d02d2c3141b5cb262ca89583f4029d0e2db636"
+      },
+      "file": "generated/utilities/mx_syscalls_license.md"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c0b1fded9459913da06fdda1166f941ab887660da1dbf29ab3c846204ece5818"
+      },
+      "file": "generated/utilities/STMicroelectronics.syscalls.cmake"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "74785b5265d56d00848851520e57772ee600b469c68e9042ea45036591f281f0"
+      },
+      "file": "generated/utilities/STMicroelectronics.syscalls.gpdsc"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0e7950ebbb4446869a96ed8452585d2e223e1e9a670cc0c88ade42f37ea2fdd0"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c531xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "41495857156405adb4da23129674bcdf990795034e07738fe84c21296b3b5a8d"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c532xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "34174fb942e6aa8147193f3ec07a5dc725ca775e33d4ce5fedd364347f501c19"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c542xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4091ca42b5c00c4a3dc89077e301d1081f255a365e60973cac6f04e96edd47ad"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c551xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "992fc155555f4e4b34aa15ada54348b6926fa67b93b61b7de67f7eef0b8a6e15"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c552xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c16701422684e339f35a310ee3163b754b4deb029f1fb4272d139ae503bc5697"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c562xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "14e6d81dae2ff74d03ba79b298695e4d7119c2bd37b165b16f58a456da8b2fc6"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c591xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "132237a59d99b280dbe9f9108bf08bf1ba2178d23f87ba715108b123baa1e6bd"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c593xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "fcafa6e4b103e8e835db520610f15612b034944e61a32a7c4e4ee798230038d4"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c5a3xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "aa9c8692d000919b75c9bc8e0c803cb6890bbb22d0d3101bbe25f10dd617b089"
+      },
+      "file": "stm32c5xx_dfp/Include/stm32c5xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f01366677643e30bfaf664e30ac29b792fe5733546cddc3992cfad88a50fd9c1"
+      },
+      "file": "stm32c5xx_dfp/Include/system_stm32c5xx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "295b3c3735202e34bfa1af00f2ff65ae05e012866e81c90100f1af2f9b120ba7"
+      },
+      "file": "stm32c5xx_dfp/Source/startup_stm32c531xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6b8316d69b6f1a01e31700192918beb2b4c8d51adffaae6a0c787274b891a5ee"
+      },
+      "file": "stm32c5xx_dfp/Source/startup_stm32c532xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cc3f71f21df0e7711798c5a18814dc8a021b41e91af00bfd1b2159fe22256907"
+      },
+      "file": "stm32c5xx_dfp/Source/startup_stm32c542xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "fced33fb8a7db5c05406aa4a045188dd2d81aa9f004d51b510aedf1455bc74d6"
+      },
+      "file": "stm32c5xx_dfp/Source/startup_stm32c551xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5c4ee77a6f18f5d086d272504e805cc8e36e09b7bb94281dc0f42356203b8dd8"
+      },
+      "file": "stm32c5xx_dfp/Source/startup_stm32c552xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "414ef67348a05f8121894fcd756f10f1175358e1d47e0b7fc9eab8674114c77c"
+      },
+      "file": "stm32c5xx_dfp/Source/startup_stm32c562xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "678eebb660460f874b9063ac565e460519fa3deb6529196c1402f37fc56ac301"
+      },
+      "file": "stm32c5xx_dfp/Source/startup_stm32c591xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "fe87453a478f6b2a5e15a9ba63902cb803ae57ec11b6ee099c358c0461ac1fc2"
+      },
+      "file": "stm32c5xx_dfp/Source/startup_stm32c593xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2f190db5ebcef9eadc919fa6b9ac33d3f3650bf0321b6950b9d8af04fc84167e"
+      },
+      "file": "stm32c5xx_dfp/Source/startup_stm32c5a3xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bab411a7ca7c619ac7164b9e8412de73b2026800a781a9550c334d731f0143ad"
+      },
+      "file": "stm32c5xx_drivers/doc/STMicroelectronics.stm32c5xx_hal_drivers_dependencies.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "26e63dc94dc4ee18d4bc1b0d6f59bb97e693de2cc51588130242eee8970ba900"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_dlyb_core.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "85a995520a17184f99a1874c34942b3b2944af16d0b3fe5feebc63d29ceaa645"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_dlyb_core.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6cf22fc57804162136337037bb24abf57d3c1df7acce50e1fcb41cbda88afa8a"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "975495b5a4ef4028af4b8b6775e04de2691ea51d8dbdd46717878213303ac581"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a0c283eeadee9acdc59444a53ca22e35499b321122752d814e1651248758a344"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_adc.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "845bfe5bd48ccdb106c2bdd2936452cbd4b89243415d5913734ebd819e9c5dda"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_adc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2bf88857459466dc94665d271e4b44f1fc6c9ff293c7c7b64d89705c823c40ae"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_aes.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cc78f50edfe7c7473b6a4c9126691e004846a2fb060cc111baafba25e951fb06"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_aes.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d3a2d57963be3127947c5e0ad2b869704f5f33c0bfa855fc77ec0ccfc984fcd6"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_ccb.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "41501f6bfc009962484166c6b6c75aca8892432ff61238184738595c67021a60"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_ccb.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "561fa1029fbe2e8f4837a82839ebf9a5e1f1d6c7caf0f3193390b15393edbd14"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_comp.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "86cd7f0d7c2adedeae3c6e0becdbeedbdbf2f650f2606c64f4d3db7bbcd7fb32"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_comp.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2a698e4e15c6cadf69f08b3002d84f4a46ae2a112e4b0145e21ec9aeed0d14c1"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_cordic.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "78ea57ac7fbf3cbde0f7e7d5d22668f1be6e41e1fab8021f3144978bf29ff1da"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_cordic.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ce4b71c591d43aced22fd6edf8f97470280af961f57fddb0e4ed6c179ae165f4"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_cortex.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "eaf1c23b721d348cba7fcdf0ec3879f8755e2e5ef8fee1f397cffde7a93330c2"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_cortex.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cdaa85264c1ba905d17151fd3c6c4b5cec5d55cfda54929daec56e25af4d2595"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_crc.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b83f681977ec57f162acfba326aced50e8c4e5e796a7e1532baa0b36035ede8f"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_crc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "333185664f79f39db16387b84dfacb3c1f191d7ab0060965fc82bf2f1eef8605"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_crs.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2a31153400396d69a0b7364f62f23e1bd138046da1635112a5409ab5974a48ef"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_crs.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "93a1e90d27cd972f46f80ed48491f1fe9f39e9290f31c918b3356fa3b9eb57df"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_dac.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "24cebb63703ff2d6fed2cc78221cb31df8218d39d06cf0e4082b0200bb940459"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_dac.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a5d6a34d9f6f41823fc1f71b32b78d421efce9be942e0e4bc7b3a1949405e215"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_dbgmcu.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f7c913f88f6aff3bc71a336dd5de4657b9975311fc91d46effd4d7e6e54e35c6"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_dbgmcu.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "44149fa34fae22a75c3cfdf6607c5047d9f01141ba683b9b905c953ca31fb338"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_def.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2e1b84d7316792bc41bfb150e47da81a869f12c6c724a4c8c1ab08df7856fe6d"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_dma.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "27408f5c7c3fefb2b224aac5772276d555f90098d45e051e81834688b4355eb7"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_dma.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f4127e1e77b52bdc7d91fa5de0a98ffc39ec96bf9b5261ceaa9c64224dbfa075"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_eth.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a1f1798ca0bfbdc79c3bee72409f331b248dc22f4cf9c43e347502318f5d7bf5"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_eth.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3f146aae33e62cfc1ac060f136abeaf98fa788e8a5e3368339dbaabef3f10bdd"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_exti.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9e43aecc8ceb167b6d8d1d1bada4e98a98fcd9541f4b9c02eda872f08a996a53"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_exti.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b0e71f52e8ed5a59e298534d3f7d04f9430035943f14a7ea31e34944a04491cb"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_fdcan.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ab36c90246910b4aa79efb59c926723d2391cb6f18b784450bc6eddf065358bc"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_fdcan.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1e73b114d3f289da4c80568b0b29c617a3c05a461cf647e1cb4a72b96d255c1d"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_flash.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "99a644cc1be28664a5c1f740d7908e29d06d540b1fd985ae9ccce3379d422f7f"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_flash.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8ce4df969b5fa13d8abb7a6a745b77e2bf15bc412b01efdce7d984efda834a5c"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_flash_itf.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "05c69c1f1f659683e659722e08b278bec9ad6fc110e07df58663b85629ff7068"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_flash_itf.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8200ff271d576eb7f407d066a08efe418953c977e66488f47b0d9ec504a307e5"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_gpio.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "454e8a39704f959364473e990a8931e83fa08a31c8cba4b99ae54b618f74d811"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_gpio.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c3e00b6d40f31a72322dad3f44a9cf9aed36291ee816ded5a98423ad04ba4b52"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_hash.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5478ac60e0d5fd0c7d502175232f4655576f101b03cff28c7042ec7b6b7401e7"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_hash.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "fd94eb2047b26de818495cfb0e82a7a0d4dca4b3a82f156a77528cafc5b883b3"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_hcd.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e22de3aec18925718fcc1a417829e07915038bc82b75278566b779815570ca9a"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_hcd.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6eaf2ab013f9ce49d6da8171d51e3b50ff512edf6f89e6cb1c8e9c66c5bbf9a2"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_i2c.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4826aa529b7cd4699503fa51f261075a0937fa672130143f38713e412cc59ae3"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_i2c.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0871924a317c6638ab8cf43c07d17d41ea55408a5b4f5c3f81b2fb8ba989948e"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_i2s.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a5b0a25510099cbd3cf70cd703d750a369ccf4124069d87cfb69c6946380c5a8"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_i2s.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5ee8657c581de9437f0e7f2e5d98d1618565c053f3cf1b83462b2eb0ec1e09f8"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_i3c.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3f509291b1b63ea5c86636aa0a971f0a3ee5ea6495819f7c87b596f70c9d83d8"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_i3c.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "05605122b67bac7afb01e84b271b5d2e8840d3945c20f82ebd74ed77f39622f7"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_icache.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c3b19c47a73ebface2766f9a9abf34e032a463c65a3830dbcb408c5200669631"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_icache.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c48281be1fb6dc4813a6be264080ddd2dd8d7eb03a66a4b71d66c67592ca9f4c"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_iwdg.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ac876a8995a9434e31caa449ba198ca21c6395f16e2099ca46c268cddf7828e0"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_iwdg.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f245987753f552ec9a943b14866c5080773f1728579a7386192f7aa59c55473c"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_lptim.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "217b808fcec4b1c974662d4ce63f335772a658afb13b14516da69626532861f9"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_lptim.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c9b6a00312e141f5f5b8e2f7166076b1293957fb748f3ceddf059dfecc2a2d95"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_opamp.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cb068e6bae637095a2ccbbc2370184ee480f7bbba312c244ab105bc88da784ed"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_opamp.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6a5e2a27e9fd130437875a5218ba8590fbf771256a331f900d4b420fa47e461b"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_pcd.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "648a5fc9a42f7e3cd757031251731db4a4f776500b38fcd835b7aafdda46d747"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_pcd.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a32791b4a006a8c7dc725d7e661f144014098d2cece70fe984d0ba0b5c060855"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_pka.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "50bef9859ed9cfae01d28d28d0013468f3b53bf27a06530c10c89b7f5c1745bf"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_pka.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1f4f243da98c836e5de14a7f1fe2a84e1c41faf8f5b4d1dee0d3d1b838767fdc"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_pwr.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "dc204206ca6ddfb7d67740eedbe320216404ca4d324e9e561ba8aef3ca612ba8"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_pwr.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ee176a6b4000d204af6201950a362e9ef2ab40207efa0db334f4a91297e3e695"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_q.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a6a3f61f8e9167b63c130d5fc364da018854609d0d070dc6793d264f8dd0b869"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_q.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e2e5a835561bbffead2abc32242b3fd138da97912d58cf9b7958297482fe4183"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_ramcfg.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cd50f756835f2a4e8fe676d8313b8e91579e1888109344c7619eaa9c4d32f6ff"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_ramcfg.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "586b488bafb3045b8aa403dbcad19b314d2659ddcaf7b91c62b745568217b9e7"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_rcc.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6fccf4e58ed68b8222e1a49d4094e22087db94e88595dfbe11f3df8fa965b3c0"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_rcc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "35f78cfd66a5a39f117f2f6bbe90979c0aeeb0d2af184a468a5ee217f7299992"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_rng.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8083bef38e5dcbbead3f903a96f040d7d56f7108ab67c56fc6ad8f7a4cf9dcef"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_rng.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5ffb9e030847def4a59d4be1be3f5700a51223e05a91ff2ea384ee74da4a6d55"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_rtc.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "59699e64bbcdac90df68162601874204c902dddcde23b47d6112f1201cc48671"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_rtc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "fb1fc0120405617970428ecef4df9657717c8309a5012ad85bee63f4596bafc6"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_sbs.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f73760185ef6f195f36a1b96ea4e2796885018f519900922988b545fc33475c1"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_sbs.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "60c81e4068c35126b75eb4a478e48957623a33f585a05e915caf28e8f651dc2a"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_smartcard.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e293817f6139e10e06d1701b021d698e3f89d2d4c4e51314ad546e69aa63d86c"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_smartcard.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e07a18167860d0b2bd9d05d4c6b85f822c5c7b23150af7190ca05fa95479e353"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_smbus.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d2c024871f245bfa0ea0459d48a20753b9544fba21e0177d7c93e70fe69d4226"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_smbus.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f6034e2fe8f4dd2467657067e2cd7620707817aa529982c053ece59029d0f4fd"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_spi.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "784b814b2a2f4a927fadc130d8dffd91b5cb20f0b4bf74d0f884328cc622e792"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_spi.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7c971295fababbfd30f5eeb3ee4431df33d30b9df62fc5d5f23fc603c1c2778c"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_tamp.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "22b9e54780516a5497fb6a3ac2762a1ac73fccaa0191d9959e6c191de60dfa11"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_tamp.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "dc03ee6554afb010b1aa941c40c99f24ef9fbb9e917857471c4c42f2713c37f1"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_tim.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b48a6fbb81112aceb0f48e303a37ec1826fdc76e68484cf38ce070f954639e9c"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_tim.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "268542130374938df69c0b1547acdffa25636878cace8a8010c84b78db4979bf"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_uart.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "de2855a0d99583d6cf0221a81d9228f82453ee03a4ce2e969dda3e4782622ce9"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_uart.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2ecd932ab9a9a94ee2b435819b10d2c0a0a8313628e7a7a88540ff356d92aaee"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_usart.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6ea3645b7de3ee358d25c61b5802da1cd05547a48150a6f5324351ddf0d1c8b3"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_usart.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8e96c43f5cfd573bb2eb1e618d7feb69300a5b48e5fe91b30e45a9829eb017a3"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_wwdg.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6938193b5cbcd1ac237413bd563f9901800fc2041877bfba7e613f5fce058d6d"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_wwdg.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1a83c4b004dbc9bae7862086bc52b67628f456575ca6ae9acce2725206ed7537"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_xspi.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "05d97331a83127aeabf51dd8f11186e3d196c68e885c4f80a194c134611e7d52"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_hal_xspi.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4defe40e0dccd9176c9dad9be0dabab99c0754c1bbc29bf5639e4e9d8543de4d"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_usb_core_def.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4de25d21532651fa0c7012ad8d131f97021f64d950ab7341ce7edf220885cbcf"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_usb_drd_core.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7aef987c584b0079308f8182c6bf02d46ca8515ebdb1670df6d1fbaca4b4c456"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32c5xx_usb_drd_core.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9ba2996204f3a2e6dbea34b9bbfd0836e37f46f13125a6de05685351bfee50c4"
+      },
+      "file": "stm32c5xx_drivers/hal/stm32_hal.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3923083356fade6e12fd1705571bcb207ad9099ef2e6a4e33cce9240f917ea89"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_adc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e00b371803fd77706d59439c1a267147fe59ebddc6ed8509a244650e5ded84d8"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_bus.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "996ad721f29c4a0a6538278279d24d8166a99e7e745d569cd47ee402d4b75401"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_comp.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d81382f19b2795d6580060e49b084a26454f8991b601bf0c07ecb04708d23dbc"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_cordic.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2d03361b3262622cead4e06edfe36c9a6ac7818a9adc575187bf783013bd592c"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_crc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ff0d91614d65e3869e37759132f18388d193e4cf3bb55be0951a5c761c641630"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_crs.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c922ef0a6ccefa394cb2990ad6272dc7b4a27c931bcb7669a4d67fa0d3d79580"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_dac.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c8cdd8c16d75db01b487f6e7f4c8bc4fc31960b1c68cefd1a4f3a4c289e9b44e"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_dbgmcu.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ecb61fb22429f2c49e7d50308210bbf4387cd096d1fbf7f5d26bdf8fd10e41a1"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_dma.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7f29b8877be14825ed114e441925c22a7e9137934f74ee3ec10671a811bda3f9"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_exti.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e3e63a026096c6d4e7f8f393ee2e558b5b8c2acd3793c8a7897321099f91b242"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_flash.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "eade59060ea3ce5d987e52aaba2120fad4cd11818aba70ad597187e83df82c4f"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_gpio.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c3038a24033aa69a816f80ee3b6a2c39f94a875687aefc338b5f8c95815cd6d7"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_i2c.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b5e84c8699d82fa0e477f28672b4d4182c9aa4ce4b135efcceeb9501cbb0be8f"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_i3c.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bef91249d83891d56078d4f7e91d23461525b41c91dd0a5f3d6f2145bd61c960"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_icache.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e306ee6c8476a1ea02dec48cb7cde65338767bfd9e496edf6fff2f39a2325ef8"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_iwdg.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "803f43621fdeba272f0f7784c03ed22772a33bb87dad8336c720bd10d1fa24e1"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_lptim.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d790969f764db8e2e1df1e1e5eb7b139a8635b715a831b796fc8ac21fa69d627"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_lpuart.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "84856fb1133a710f122ea521291f8ad1f651161e47967e737b7883247d5c1054"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_opamp.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9808e3f599cb3a318c60df410aea382b52ed551026c44c66902dea276488e3d5"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_pka.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7779fa21e93f65e43011de8ae12ef38df88b545fb028389b3c2950b79ceb1c9f"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_pwr.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8b8927ab1c02f664f72a541a8f549e0f07bcb73fccefb0ba98a594989a7e8e75"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_ramcfg.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3fe86ff2c2a0843418d69666e68dd2d27cd12ad8cb705537d63d64d6c72f32c4"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_rcc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e67aeb038dc3b84054b328b64e5272ba0f3736af7907bde456a33b1ec3852c3f"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_rng.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bf8394c0daf5bba6bb66637eeb301d2efea85280cb798e334b74a2e9f71c4786"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_rtc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cf4cb1682f9f928a186b675ad220772f51f2160f401ad65ea7d99f3b9d937258"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_sbs.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bc64c4e1b6297712f58b6cc329149d169fc418b99df7b9c427113485bcc2cd15"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_spi.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "dd7fd62d4131b8b03a33f5e35624900588ab97008231c4e30fea6742407d93dd"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_system.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "082edbd9c7f21a122d5423bd5a927ddbff61719735d8db9a20504bc5c01cf8dd"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_tamp.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "40bcfcb2922a8eb594ee9f715def7dd79fbe08801651003965130b266963cc7e"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_tim.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "044c41883df6073361b59f51593577061155eb96e2962164d8c36df069b8baa8"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_usart.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0685a9500afa324ab542e95321c5cec1d3900e18c0fd3d03411b3d8b53b3ef46"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_utils.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b964a72fed6a28566fe7bdbdd3a78355f4887b74f277472022b2aae12ee60296"
+      },
+      "file": "stm32c5xx_drivers/ll/stm32c5xx_ll_wwdg.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cfe1758ebba7c9f10a17827be7aa23ad903897d76e14108301cf0e639117698c"
+      },
+      "file": "stm32c5xx_drivers/timebases/stm32_hal_timebase_rtc_alarm.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "da321d6836b537cbacb90eccf43e2147ee51682bf458daa7f17d2e43912b6578"
+      },
+      "file": "stm32c5xx_drivers/timebases/stm32_hal_timebase_rtc_wakeup.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b1d0e7fa7ec27d940333456f3675bfff8da89533947049b93bf0228c7694c7e8"
+      },
+      "file": "stm32c5xx_drivers/timebases/stm32_hal_timebase_tim.c"
+    },
+    {
+      "fileGroup": "RTE",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9a046968d9a7f48bf8b3b1c0d00ef5e671f46e6c8ba00c68ad4feb2ed141db00"
+      },
+      "file": "user_modifiable/_debug_GCC_STM32C552CEU6/Pre_Include_Global.h"
+    },
+    {
+      "fileGroup": "RTE",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b747404568918499a9ff58ff40d946b87c7d6d1aa41e76375476dbac41fea6f7"
+      },
+      "file": "user_modifiable/_debug_GCC_STM32C552CEU6/RTE_Components.h"
+    },
+    {
+      "fileGroup": "project_file",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "159ffc94c668f71612b090b5904e5c9e1ab13a1ee8cb741e1fc7cdeb9efce4d7"
+      },
+      "file": "utilities/syscalls/CMakeLists.txt"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "242c2f48df5d54503562adfec5065e8d086ad06f4c5cc22da125f3b6cde47a52"
+      },
+      "file": "utilities/syscalls/LICENSE.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bdfa99c5f9272cbd6064b3d4af644c96151e5423e854b46c8cc9b0194ce8a832"
+      },
+      "file": "utilities/syscalls/README.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "86dad8652fa8741ca08b9d11d8a72467e8f2e46a73461d5b9a79ab84fcd7e19f"
+      },
+      "file": "utilities/syscalls/Release_Notes.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a87cf836d422e7458781260ad0a65b66b6c19bb618b970429ada865173297b05"
+      },
+      "file": "utilities/syscalls/SW_Security_Level.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7b5dbfafc500f769610acd49a2ab1ba3511bf258efe53275f9df712ad98326f2"
+      },
+      "file": "utilities/syscalls/syscalls.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "afe5d245568bfd342e3110b81fd6d9e791594e0f997359df27ef1b908a2e5597"
+      },
+      "file": "utilities/syscalls/sysmem.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a2fe5bccf3b5c1215707660a719367a0215e51fc30fd585f911c6de51016771f"
+      },
+      "file": "stm32c5xx_dfp/IDEs_patches/EWARM/README.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "616bcaad078a4458e5030f68ddb9d6158030147478e03d004730a13f60bb6fe9"
+      },
+      "file": "stm32c5xx_dfp/Include/Templates/stm32_external_env.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a4a7100de09bd7632fc8809e95efc864cd1c932e3c0d7aee48b5029d4e75bebb"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/system_stm32c5xx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cb00ae394d5f2c0ad08592a372c495de8761bd275faee9ae3f93804b636650d0"
+      },
+      "file": "stm32c5xx_drivers/os_port/freertos/stm32_hal_os.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9b795ac3ba14d0cd17a30bc62bf0ecaed9d1dda11132bfd12db8c369b4556106"
+      },
+      "file": "stm32c5xx_drivers/os_port/freertos/stm32_hal_os.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8ec8c4cf4c6e69fc3d25bffec698661db73b9f6599daf0c045c3a108fed14f46"
+      },
+      "file": "stm32c5xx_drivers/os_port/no_os/stm32_hal_os.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5bf6cdf991755c1a5c137ab34a2fb45810a4a744831588a4712b78350706aa89"
+      },
+      "file": "stm32c5xx_drivers/os_port/no_os/stm32_hal_os.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ede59030a8a72c96f48dd53d49c318cd1b0b1f675301ad5bee6e9c965dc72cd4"
+      },
+      "file": "stm32c5xx_drivers/templates/common/stm32c5xx_hal_conf.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "811b45570fdc34fc5ad7b308625795b0a8c2aff53c1a261694772df6b7fb205c"
+      },
+      "file": "stm32c5xx_drivers/templates/common/stm32_assert.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3ae6450f0720b522bb4bdb6f67fdd1be2806cb7670d2c0262a0116a789b1d5f8"
+      },
+      "file": "stm32c5xx_drivers/templates/common/stm32_ll.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "028563f8b0dfcec15fcba22fcbe99ad6176653cea5b9abba64dff29a39156e1b"
+      },
+      "file": "stm32c5xx_drivers/templates/os_port/stm32_hal_os.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1e3b210f642472c0ff5a45087da42ea506d472818e89521e6e3072b84de63226"
+      },
+      "file": "stm32c5xx_drivers/templates/os_port/stm32_hal_os.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "098a95da7e00e575ad18083621ad582f014cdbbe2a5789165d6bc8a9cf5c401a"
+      },
+      "file": "stm32c5xx_drivers/templates/timebases/mx_rtc.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "95b509716cf72c8222da31bfc0898bdb6b691e2be13ad136a7f35a40a1f3f96d"
+      },
+      "file": "stm32c5xx_drivers/templates/timebases/mx_rtc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a299153fefcd6d01d5200b7c4109f46ef15d681768112badc0fd142bc28c813a"
+      },
+      "file": "stm32c5xx_drivers/templates/timebases/mx_timx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f89694e9e978f572c01ec49ce7fc517cc4b82f03ea9e2e0a86821dfc110578e9"
+      },
+      "file": "stm32c5xx_drivers/templates/timebases/mx_timx.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1295d2d0de07c6076362e9c7d88d97f3a458d93164f0362f742f5530b512804e"
+      },
+      "file": "stm32c5xx_drivers/templates/timebases/stm32_hal_timebase.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5eb5766f27fff5019fbb0a416a56d4597dc2bc44b93d0a756a061394da73a8f8"
+      },
+      "file": "stm32c5xx_drivers/utils/fdcan_timing/stm32_utils_fdcan.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d994bce3be0587b7b5271b74372fc67aa8a4caf5d79c167434f9b6c18366cf35"
+      },
+      "file": "stm32c5xx_drivers/utils/fdcan_timing/stm32_utils_fdcan.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c3f33f6b98ec255237e452c39ca38b52199ad4a325731549a4d81c572bf165d8"
+      },
+      "file": "stm32c5xx_drivers/utils/i2c_timing/stm32_utils_i2c.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3780b939db7ba9b37b90b904264426df179d4e19431e5fda539ab4c59cb445ec"
+      },
+      "file": "stm32c5xx_drivers/utils/i2c_timing/stm32_utils_i2c.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cae65f51a993f8a6326a525e7f1dd657065f8f419e2ce283d59f70172ded3580"
+      },
+      "file": "stm32c5xx_drivers/utils/i3c_timing/stm32_utils_i3c.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2f7176ae56fd4a08e7755251ff6c801391a6d8eca924881728f105175ce3b3eb"
+      },
+      "file": "stm32c5xx_drivers/utils/i3c_timing/stm32_utils_i3c.h"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5cb6ac766dc2a71be2e094b6e92b77158d382db62b03f852ba2ce751630b6cb9"
+      },
+      "file": "user_modifiable/Application/STM32C552CEU6/main.c.base@2.0.0"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "36b0951f773375f65a05aae8a8e24187e8ccae7ce6a053539612f1c012f2dcc9"
+      },
+      "file": "user_modifiable/Application/STM32C552CEU6/main.h.base@2.0.0"
+    },
+    {
+      "fileGroup": "RTE",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5c4ee77a6f18f5d086d272504e805cc8e36e09b7bb94281dc0f42356203b8dd8"
+      },
+      "file": "user_modifiable/Device/STM32C552CEU6/startup_stm32c552xx.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5c4ee77a6f18f5d086d272504e805cc8e36e09b7bb94281dc0f42356203b8dd8"
+      },
+      "file": "user_modifiable/Device/STM32C552CEU6/startup_stm32c552xx.c.base@2.0.0"
+    },
+    {
+      "fileGroup": "RTE",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b859a0145deddbcf6be5ebcd810a85563e872a3346675b4d4e049bc39bdbcd6d"
+      },
+      "file": "user_modifiable/Device/STM32C552CEU6/stm32c55xxe_flash.ld"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b859a0145deddbcf6be5ebcd810a85563e872a3346675b4d4e049bc39bdbcd6d"
+      },
+      "file": "user_modifiable/Device/STM32C552CEU6/stm32c55xxe_flash.ld.base@2.0.0"
+    },
+    {
+      "fileGroup": "RTE",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a4a7100de09bd7632fc8809e95efc864cd1c932e3c0d7aee48b5029d4e75bebb"
+      },
+      "file": "user_modifiable/Device/STM32C552CEU6/system_stm32c5xx.c"
+    },
+    {
+      "fileGroup": "generated",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a4a7100de09bd7632fc8809e95efc864cd1c932e3c0d7aee48b5029d4e75bebb"
+      },
+      "file": "user_modifiable/Device/STM32C552CEU6/system_stm32c5xx.c.base@2.0.0"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "70c0ea0563a9500b1b794e17be2290957d937f868ddbcc5e1d8e4266253141d1"
+      },
+      "file": "arch/cmsis/CMSIS/Documentation/Overview.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f7361b36a56909eff2b1cecd778443fd9da21eaa86878dabf5e8e216f6bfea29"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/cmsis_armclang.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "015fd70aaca6475443082154b7c844d6db58e757b2dbe3fa3bd2673e0c353ba0"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/cmsis_clang.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8932e7ac5c9a13b199c64f25b3dc67ebf0a877b33dbcf434d4e1b78e625f57c5"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/cmsis_compiler.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7c34c8eb47e78acc8da3122fd27fc912b653b14817a2e1fb55ed41fb55c54281"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/cmsis_gcc.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "636f5dbc40e48243aad3312b3942457bae0df2f4d6725680572a13307b6d454f"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/cmsis_iccarm.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3b9195c5373a2a4dbfd968b083b3d7f5f446f9ec2e126f75928ac1ff4356b91e"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/cmsis_version.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "84e0df477d2e9cfefd7afe1e69d5dc29887f914147cf603f9823d3ab8bc6b1ef"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_ca.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7ad6ed17206a7cb99bfef0ec36411620fb2ba9b4ef0cc1152b0e68c7db62348f"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm0.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3a01ca99a202b3c2acf476e9523181c9f6ddb027fa8e097c0be0037b213c8f23"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm0plus.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d5c5fade64174a97e81156e765cffa867aace08ccd66617bf5622327e1ede099"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm1.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8d2fb0ec0e59c664392591fe703cf7243e50969f05d9c6c4e4fea42cb99032cb"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm23.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "00c9f5f9b9244661549e0ee7d4fa0e82de049f40c17902c201c1eb00fce70936"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm3.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "47bd70aed10df47c7ca54bf049685d24ae886294b2d05ac6e411804dfe81b4b8"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm33.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "eb1c002b97357517d1e070b0565f8bd3d859c95d09074e47b9cf59cee70f8130"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm35p.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5d6f71c32258821ebf371045a5670fe74a1cab49318f8df75344adfe4813de04"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm4.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "647b222cdf36b0ede804853c153b6d1486603de7c881ea3ed3acacb69b7b3c7b"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm52.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b0772b23e6dfce96638e7ca0040a063d9b399ed91a2843c62c32192a059d0231"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm55.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2927d0c055445d19cef7d311e076961ffa86f7af4bcbc5673dbd14d9c160ac29"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm7.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "acea058815b71ec3710415001518e014d19f50be7b06e1ecf1a6071f28945698"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_cm85.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8a42600f7afd149a6029cc147f0aa7e48ad016b1729d87de24e29b74163910d0"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_sc000.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7846ebbc73ded9559195026f7719a6ffa7646cb0fd2de8a5927812b9ce8bc944"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_sc300.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1201164ecf3ecf25df9a49b6abea55eb3b612addfdd0b9d1d460b0e95bc3f9f1"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_starmc1.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "425936814b668ef4523bf759d6ac6f9dce8a8dd3d64087b3711239854bbb53f5"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/core_starmc3.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2bcc2a5fea0567eff96dd3f2fd197b88feaa144bfe0df6146abd802701456d3b"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/tz_context.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e3d9ca1a5deb82e47fd20e657c8080b55ffac1a39693d3d63a535e9421b196c8"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Source/irq_ctrl_gic.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "24f3fad8a2f6371296ab9319fa9ebe14df8dcb1a397565ec2a7aa9d5f75ad062"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/README.md"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3087d4839361e42917601fbaf02aaaf866de75f5e32351c580fa6db07bffa55a"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/requirements.txt"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2d698e03b63c296ab52e5e859af2980c18a3f47eb3e836f84028bbf7b70a172c"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_CAN.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d9a32d1e7ac5050e9b5c04b5443d02d203887e911daee1a7b55f09866caebbc4"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_ETH_MAC.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1cffbc0fb75c454448b6d019a27574f013f7fcf1241b74e5137f0b3d24d5bae5"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_ETH_PHY.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cdf3f8982da019176faccafd025994640cb0502149a5287ef55d63135209e4e1"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_Flash.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0e64ceaeb02f5273e99e66d4516199fdb37b378b6c8541c40c3f4080ff5c300e"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_GPIO.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "871a822c47339f93f500585d7d7d5234ae22cc75aa24f91b1b0b3351723c0823"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_I2C.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c96b0417cc9aa12b4e86ea05f39615628a5b9bdb2575b3ed8bc920701a4b9ed5"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_MCI.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "89ad2d33e0fa621c9ef37b9f595cb030130f78b76ab12dcbfb12c02e6987ce9a"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_NAND.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "81866c35c135ba906ba15da8071627067d0b310fb2c9c36dbcfb06a4c4254aaf"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_SAI.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a10c1d2e05809747a07b795010e69f4db4d15db0ad5abd551a66ec1cb49b8a99"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_SPI.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a9d8e6dacfacc2cee826299b42923fae3a97ca4f89550e8459a30ea92e87ab17"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_Storage.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "285aeb0bb010e38197b626e5589157d67480dc881a7264db394b1eadff692be9"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_USART.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "76e1c70a5d5492d2575f051bdebdff04ff6e73855f5deeb0c581462d6c416aaa"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_USBD.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7c07a8f2bc787b05857a45c120e62192a047cadcb6d0a9d1f41dc98b36cf2cb6"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_USBH.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3282c09b4cc28c4bd541f775e9be107339d0f824a767acd1b753bc74d62bc1df"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/DriverTemplates/Driver_WiFi.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e65cded15637d19f7faab80185f005b12a78992f98715da9c5c4fb14ae4b8423"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_CAN.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "eb32e5589b32a3160941c60b638a474c0ae23f9c63eb04143aa31908a4a70a4b"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_Common.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a4944997bc5e047b567fc01afbcc9c21dce3b790ce12eada2e623ccb720db64b"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_ETH.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5183a1d47111ba464c0a3eea9a2a92a4093157343acfe7412fed265c8bd4a541"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_ETH_MAC.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f1321f80b9333d0d3a90bc4e633af10fd1f2b34629a87788913b3d7408be8887"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_ETH_PHY.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c8522e9df2dbf4847c177d77b4d157145e83591ae267fe45b566c2acedeacf02"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_Flash.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cfe716618b100d6689b4fc920b57059fd063147c6ec723cc14df0f0b0b4ba2a9"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_GPIO.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "127d76d4c32daf1c487fd2b0fa79c071af97c12c6664275461e3138fd1c298fb"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_I2C.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1d15b650a8a92addb730f47e035dd2a1c9c9ce030a96d65bc5a800e230d150bb"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_MCI.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "45107f1c342ec348cfbd1a348af390161c06395df55e349279fe7b0a66d9ab0d"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_NAND.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b1d6a2ea47c5a86b5edaaf96c1cc109e666c7b650c02c48dc15d338548da1387"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_SAI.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8b37faf9235f09f7b64f3aa01620abc45e6969a4be470dd197aac808dedda080"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_SPI.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e9d4158c19b0fcd76c144328b1ebc2150f8a0ac7f3f59922a77ae26b3580e0c8"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_Storage.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "abb69451384f28eaa9fee6c2b87f1749fa21546901400213f21176bd0dcaaf8a"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_USART.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "be5984cac459431b22fac0ce8c8a5672672fb660b81123ce61babd33be55b5e4"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_USB.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3a2c0f1a5dba8630214ead0b9b2d38b704603b67f83ad137ef627a91c92c648e"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_USBD.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "42e8cdb2de8bafa1ee10da2e25f2d8d52832665f9ee872d077634d122dbad778"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_USBH.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f5c2114a4a6c0f50493abc798eb0bc6a3eedb06bed113b5b0d7524ad8d34e04d"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/Include/Driver_WiFi.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0de5e6ff219ee13bcd1b1ca2b6446d68cb56b6a11e16494e9577bb2ffdd52a70"
+      },
+      "file": "arch/cmsis/CMSIS/RTOS2/Include/cmsis_os2.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7fe50f667730a74087d3c94ba9443d4c5d7c14a8f7b6c1429bec2b0daea316d8"
+      },
+      "file": "arch/cmsis/CMSIS/RTOS2/Include/os_tick.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "504fb9921472f727fe43ff13a2ad514f5505a3221a169ca3a8c4aadeb6ea8ee8"
+      },
+      "file": "arch/cmsis/CMSIS/RTOS2/Source/os_systick.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "04d552de2fcf09bdfa9113f15880f2c0d4575c2f9ba65bd18a8f728c6cf9030c"
+      },
+      "file": "arch/cmsis/CMSIS/RTOS2/Source/os_tick_gtim.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "feef7b175dcee5fe61b626ed230bea26020a3b0c5ca0858984bcdd590c5ee9f8"
+      },
+      "file": "arch/cmsis/CMSIS/RTOS2/Source/os_tick_ptim.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "579ccd0ccb1333010ccbaa7f0790184223f3a7c6fb77acf8fa16944c8a491129"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c53xxb_flash.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2c6423b9b55a70dfd3f8fc36d64893dff6fce735154ea30fbf8cf7de1afe1513"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c53xxc_flash.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "28aa08faf84e1b921130841eceb28e5a731c7c60863c9d3d099af2ff0ed81407"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c53xxx_sram.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "dc19c7fc36911ee4b627bb2fd4f0bda4130b6e0b5e1f062f873ce47c059facfe"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c542xc_flash.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1cfcb7c60d25d076141c7173d14965a426353c807b1955319c581748f1421b75"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c542xc_sram.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6ac4e36d00e577f7a881bb06dc0375c7b752459d59a08a57318b49311f6e2ed2"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c55xxc_flash.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0da2472e9461f120d7fcf8db7d552b00e2b03096c990249d32f6fd3690444f60"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c55xxe_flash.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "827d82b55b722b0c29dd2767b1e17855bab76852dac5a91074fa85f4a346a586"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c55xxx_sram.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "74e69aa17282903e5c6d59c679e121696c14e86db35cd29e8bd21a3d9d80fddf"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c562xe_flash.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e8962a466967f7105c5fee47c44bb700b8b4ebe98b10fd8784f675c082028b00"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c562xe_sram.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9a25443128cb24420b1cd7c623f4a52e29842a5313824846639d34fd754a527f"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c59xxe_flash.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f87b806feec56ad7f3e8277ad95b12b657d1164876ade80404f978dbcf8918bf"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c59xxg_flash.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "459f5e97c787b2838741be50fb881f6a9004e0606364f18929040f099be5b159"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c59xxx_sram.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d4b4ad5c8ad682cbb65c0933a1d9867c52e2cd88bbd32b6f04eef8ae2006d57f"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c5a3xg_flash.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "200396baa36a96c3af2e411bd203866af03f8ece5fa01adadc05709c2c46c809"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/arm/linker/stm32c5a3xg_sram.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "73ee990f98b390136d194ded70725e803d8c283687e025ad057816f885615e58"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c53xxb_flash.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "517487e22e97478ec8945070c9917eb6a90fafe2ef7e7fb377d62b5f51e1ea6a"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c53xxc_flash.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "05b9db07f60ad32bf4b9c9b8d5ffe37de42904f82a3410a143afe0422c4c05d7"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c53xxx_sram.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a705a813a146c1303bb3d07633931b44c7fcff8cdac334881861ae051a44d6de"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c542xc_flash.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9dccdae3d2de08fa6894f39a5f5596876868da5bc259810e269bf1d700ed9590"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c542xc_sram.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9c513c008789a9fd58178d399d041b276e3e7ae3a47d6b3b549081585b974ad0"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c55xxc_flash.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b859a0145deddbcf6be5ebcd810a85563e872a3346675b4d4e049bc39bdbcd6d"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c55xxe_flash.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "caf876ae580e991fe9565fc8dc3d739c6fe9bd53cefef97f567a77644549bcdd"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c55xxx_sram.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "fee467fbe9f5eec359939c59227ccdf87ad8ea18655ed4573ffd036693627562"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c562xe_flash.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "93b811cc91d6108d41f8032fdec76d0d251a75f0355be509e91b645b5aa77fac"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c562xe_sram.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c4f276dc64a2e2b4b70e86d33678eadf8de3176c311fcb68aa78be10aec95d26"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c59xxe_flash.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c6de0d9d11910c866623f23bf5c4d031928cbee564bd1f6380e83f0be26025cb"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c59xxg_flash.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1439f91df8a10335d2e563c7a790c63624e8b5181b1240712b6b1b3c08556e39"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c59xxx_sram.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "595b55e52b1ee483c8ac377c3d651264c0ad0b8ce45510d0fdc1c4e061d913fd"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c5a3xg_flash.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3efaca2fe59db4e92beea716d51fed77e9b79d970aa1a6deca87e7309ae42709"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/gcc/linker/stm32c5a3xg_sram.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7fbfe263bac196a8ebdb9d10c8f125d577af773ecf51a0530a940f5d5a3448c9"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c53xxb_flash.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "10b00a3ca6753fd0fbed08360e2e0d6ee4740cd8446f3274cf2162be07f292f2"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c53xxc_flash.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5db8e685f4031fd4a0bea1efd579ae8a99847e2baf51128f335d0bca4997973a"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c53xxx_sram.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ceb771e9baa5e7eba340c97f57cd18040d341bd676a48a9b6d3e783ce21833cb"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c542xc_flash.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a5bfe270abc2eea7a2387683fa3ef8d7a807501b9976aa60ad1aac5ac47f103c"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c542xc_sram.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bd895341ced6a5651b605d758e3fb910e61ddc0a487c1cee020e9316da4b6c7f"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c55xxc_flash.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "91dcd34a45289f267ea97011f74a81f09be3f4a3ff69d7bbbc79c291e964a9df"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c55xxe_flash.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ced3fd1704d52b23cc0f79510d79eb310e31f8f8b0922c3d8ae6e9e490528626"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c55xxx_sram.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "680d1898db90e8087d9b0dc9a6a2ab75c22f318bce35b23606bf733b1c6ad213"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c562xe_flash.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0261f7eded52195c1ab89cda65049e5ce4fa3698d614a210b738d5f28f9f1571"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c562xe_sram.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d7878c9e35e602d193b8ecbf7ec29605a4c680d54305b644adf20b0a598d5bc6"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c59xxe_flash.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "6d1f56b78627aab2fd6db782f242e85dd606fc3745ad26584f3f7d17dc0d15b7"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c59xxg_flash.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d95da014f5671a9088f9c5a3e5bc424790d88663a9940afcea00af3533f8c73a"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c59xxx_sram.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9e32a006861331f6617820e82d7548a7155c92756cd65d9fce25bcdb292138db"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c5a3xg_flash.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c1c848ecea4c11d5a97da435a49bc6674f7bcb6c7006dd4ce6f99fd22b1b51cb"
+      },
+      "file": "stm32c5xx_dfp/Source/Templates/iar/linker/stm32c5a3xg_sram.icf"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e3a6811ff4efb84514114b0b4832ba94bfccfc661039cf3f00e3c373cce29655"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/a-profile/cmsis_armclang_a.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "179ee88a1c2e7c2e56fe399e9e88f4dba1916edf80152d88c71807db4e675ce7"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/a-profile/cmsis_clang_a.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2fee149025d4d08f20fa54fe18162d24d5abc61908964501ff20f50621418a7a"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/a-profile/cmsis_cp15.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bdf9a2a49a012704b799951e66c6af13f7513349eef5f7291fd1d7ac0add0f0c"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/a-profile/cmsis_gcc_a.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c41d99a21bdcd2050d6d428ea2591837999cd7871e39d49eb7b10fe1ed3c4ab0"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/a-profile/cmsis_iccarm_a.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ba65458c3550ed2613902e084ddcd69f9feae1dfb80bcb99d50e10c88ef8c336"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/a-profile/irq_ctrl.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f7905d3e336feccda0647f214e791b424c5f92e788f1303e587cebca729b6dc3"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/armv7m_cachel1.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "44294dc3e331deb8daae269793e579cc10920a9b88d133bbaf3a7af65d29f9e4"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/armv7m_mpu.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "fe2f5db52980237fe8bafe265b660ef9caac90bae4c478d34f243e82346d1daa"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/armv81m_pac.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3540efc65de718421637748878159d19e2aabc53609eb4bd02d6894cc9977582"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/armv8m_mpu.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1323587da9fea03c96a685a9cf60c576b4d0532b3339501401332ff8a6c58e32"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/armv8m_pmu.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d7425ea4ca4577e557f9ea155006f5506db1e9f6580442d56d6417549ad53b92"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/cmsis_armclang_m.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4d6c792c84658954f991176e1774513c367df20d22f2ab2f43c30c6f14e2f106"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/cmsis_clang_m.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "56241ce5b4798048f84429e28c1949d30bb907155f0b8351cb36aaaa9cbbeabb"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/cmsis_gcc_m.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "044ea6c892db7a8e65664894416e516d5aa1f6461ab94026bfc3feb28fcce1ca"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/cmsis_iccarm_m.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c753507cf915b193908baad0754322144c1b40192cdaf22da0aa8b9202185cef"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/m-profile/cmsis_tiarmclang_m.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d3875ee329abb8a5746cfda99633d71f30a131156ebc8aafc8b2ec4992df8616"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/r-profile/cmsis_armclang_r.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "50cb3a674ebffb742934ec63c86948ec321771ee4c645d136a5d897dcc2ead07"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/r-profile/cmsis_clang_r.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3502300039821e8f1b8ecbd7a5cc433c5ce90da41e4d71fccaec0bb1568404da"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/r-profile/cmsis_gcc_r.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8295759ba6993f3a71c4b7cd953e75bcb59c016960670f2a9613b081d6afd415"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Include/r-profile/cmsis_iccarm_r.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bdee8e89aac7451926fa40d546c54ede13f1c13351dac1c5d2d4e24af4404b31"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/ARMv8-M/main_s.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "40229bca7f97948c6713171e5660a358876800a4b19f702e198fd58d4c4e82bf"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/ARMv8-M/tz_context.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e372d6fbcd3f387c0863895bfdbbfc6c2f4cc94920a102290139325414bcfe8e"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/apsr.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8178d7b8a3547b610e6fc82a990f3b184996c14d9e67516e328560c3ab77b356"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/basepri.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "849447ed0ef8302d2e4aa8ac0b33a6abc18b5f0221143773ec2b6fb7c7fee621"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/bkpt.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9cd06bee7869b132b2cb3c3962ce76ba48941f3e3f7c1fb9f9e8713b2d0e6ae4"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/clrex.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3360d255a7b2d34bc5321ca193a412216f9aaaddf2e17e74c0ac0dd5e586a415"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/clz.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "43007bd2854b3ea0a79f354e24b137cf76b47e04368731743068c616b5986487"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/control.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f75c13bd1dc7d8293c12d34eee697cf63771a090552f4b4b0487d675c0458881"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/cp15.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5eaa98520a207515468f5b522a484cd169a4ec8e034e13cbc0ca70cd0e28de0b"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/cpsr.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cff8f2af5998d1e83ddee1afe7166fe398abad650af35a4bbbcd9025f42f8680"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/dmb.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "79e4c981e9af38d0ddf584a30e9c408133c75165119bc6a36949ec924f2f0137"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/dsb.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cde05a77aaeaa8f18d02c839c3759ad706367b747059d462d97180fd42855d43"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/faultmask.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "fa072431cc6f8715530f88a4ae8afb0d35e98215758871e2d9f7aaa6ade35e0b"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/fault_irq.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "90d488c4badca6a58a6e334671a15a4d6425f66cf3f5b869c415e0ed80806571"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/fpexc.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c16e5f7d0a534d1c69041854b951390358ec74f30a3d653df2f34c41fb95de2e"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/fpexc_nofp.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0ca4d0708ead686d7030234064e9a38721b52ff622992f3a46b232885c94cd94"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/fpscr.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4ad4a3aed5931d4d083cb20d875c9554cfaa57f7dd33ab496256e3ba09a798de"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/fpscr_nofp.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "f691fd6d50ea6d0a20c5869b67121e2e7b7b01b3b5ec5c5dabded1c4e97c08ec"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/ipsr.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "215e7426ce53f4c672070c33e2ece96a593dca157b3237a64915e447c846e3b0"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/irq.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4e053e4ab28a3d78cc1d192286bbfa94a6cd093a84363aebf52169c2ba78cf93"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/isb.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1697a36a655d5ab6d37e9caf018e18b14d0798c6c82fae88ddb4132d1939c226"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/lda.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "887364c68ef659d481d2610f991997198fa02c57259489852b5fafcd6d91bdb0"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/ldaex.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "0f5e1e40f561e9c212715ddaaf50159c368a31c6f95c980420e6854bf694549b"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/ldrex.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "91c9c3edec62877cc4ed3f67b1acae1a9f003876ef05d36d3609d614a7619db3"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/ldrt.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "9e5187828f0a49e1c9d14257aa496addc1c5c4f2711c835bd380e212093c9dd8"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/msp.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "49ec9bc1b880e3915990ea436fd9bd34d993b88682219f80537d32e6ed614c32"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/msplim.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d9e5688ccea72aad5c25ef1725f36b3781c339a5395b49339273bb81102d9d59"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/nop.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "8f8241e89653688290a02b8b51b462337414c8c11a214c51016e80a08612335d"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/noreturn.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "ebc6b5e9fb9a156e77a712c63c9c7ee23dff2f416cbeff910a5549bdf431fc9d"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/primask.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "47a04428f2a3340317883b6edd7bf6a3730c3ab8ad17a740e7602d1148d10b04"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/psp.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "efdb6f93b5a1ca8a4b90b03527a1117e8b4944f85c89a6c59ffd98a9b1ae48b3"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/psplim.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "106017b02eb60c6f47ed350fbf51c4159ab0660698867ecff28e1ab8b82ff14d"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/psplim_baseline.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "aaa08f94154470f2ad664352754382b2a2a4edac41281b1f1ba9b0bc209f098f"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/rbit.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "861627307c39a89c60a56f18002e643c34b6307fac05818fd7c35c7a917d38e9"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/rev.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "a6152ece01064ab029804a89bf78849bfd3fee2417d6d3e60e497277f41382be"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/rev16.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "865af0301f6ff883a56db07bc157e253bbdb10bb82c91ad2f99d1341d3b8975b"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/revsh.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "89fc4440129fd3f481b1c4dd76de690292ab5bb40fb45e3f1e70ac93a68da943"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/ror.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e0004e54dbb1903bd01d9cc4885faeb470ed72d2d926ee046efce9fed660ceaf"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/rrx.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "edbb605cc68b292011278c19323e958f9147a56a20b88bae5d5aefb69ca3f313"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/sat.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b1050623e2817ba88af8b75c816feaf2b74ebf26dc828a1c13d80ca1965b8dfb"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/sev.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "52b3bfaced62f782196d41ce459c1d1a618446c8e8db05c9525f7d3a510c5262"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/simd.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "2254752e9aaa80e7da09c72e0ec121f90222373786e63fa4e9a211383ceb9d4c"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/sp.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "66467b94d311e17216d432929201fc57a157e65229c777c9c802ca0832724faa"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/sp_ns.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "176ee48a73826163e426518380c861d933ff5419f51b00ce98880841883b8730"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/stl.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5c36f2b7a6b32d30453b4819b6f1fd6e13efd685936af0f707f53d69a0cc9f67"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/stlex.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "779fc50814d3435351f28ab9fd08b1556f2f9b80adfba315cd258125acaf37c6"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/strex.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c443d6d7c3da35023849b1bcd9cbccc4eef54f9379b9a3849b9405a14e5382d8"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/strt.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4c9bbb6436e5110e7bf9dbaf500db234e3f6741ea58bf7e21e8bf1b8a72fa229"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/systick.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "238d46528dfa43efb7c6c1a339dc7d2e89222e761fda90556e5ec4d659e9c43a"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/wfi.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "c875880e89afff23b944c7232bd5d653f1355526b105d0dd8252a9d363f844ec"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Test/src/xpsr.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e2f10b79b0d8adcb052490d3bdbde846c77685d8f333399821896b9de891e27c"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/VIO/Include/cmsis_vio.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4c1ac019078f56364c2e07d7af51c2ca0cb838e3c8db1e218b1553a447dea00e"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/VIO/Source/vio.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "5ef54e3ae5e907468fdc28de6954a35f115ed6c8a051414e1482b228da9da917"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/VIO/Source/vio_memory.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "1de6c156ad9af4a641ceb5e5ea5c4e057ed273fdd86d3ca4f97ce181c46f26ea"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/vStream/Include/cmsis_vstream.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "3deb92e1d2f05c517285af6505c739c415e54d990cc27664735996275077b7a5"
+      },
+      "file": "arch/cmsis/CMSIS/Driver/vStream/Template/vstream.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "7b167ac79d705966267f7b28fb8e2e9ecbb0d0e9e71ceb2bf66d42639fc1da82"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_A/Config/Device_ac6.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "99ec7bd4258664edcceb0ee40787337a76dc43f5372335a169dbf63d09b741e8"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_A/Config/mem_Device.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bfc22af2e72d3ec39e1eef09a43441921f131af4c168bcd7beb00c83a99692ee"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_A/Include/Device.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "d56eea039c7646e0c5f0c3f00e0915eb233b591f830f0c630b39f5fe2522fcaa"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_A/Include/system_Device.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bc25391ea2945d5298559e38774c6903dad454bea4b409ed9ec5c2282c5d24ca"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_A/Source/mmu_Device.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "bcd3b9bdb661383040a663de816324db6bc96a98090cae20a01f041b1e88d3f8"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_A/Source/startup_Device.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b197d5b75b114b0bba661b7b78f703ce7871b5787620f819f72707d086ef8bd8"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_A/Source/system_Device.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "cc36ba0fc6c07e005ed75e53b42ef5e43ae41fea4f7b456571c633638ffc1dc2"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_M/Config/Device_ac6.sct"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e63806cba27cd0892c0c4ca8d31c18c28f9f91cf475fb4bde7fbc50961f64aba"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_M/Config/Device_gcc.ld"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "4fcd6147a742e8b4b6a3adb42a122894c50425a81b6bd788fe9a4ca15b8742a0"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_M/Config/partition_Device.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "02c957ba628a5d198fb2bbeb30f94c1e0c783380e667cb0505a6aa0293b1038a"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_M/Include/Device.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "e0806ff2b194371e07f410ae22e3d883eaffc47b2379f74a4669baeadf0462ad"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_M/Include/system_Device.h"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b574b4ce3ec8b0edd8b06e04483fd01239700ecaf43b30e9ae7066552c59b5c6"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_M/Source/startup_Device.c"
+    },
+    {
+      "fileGroup": "pack",
+      "checksum": {
+        "algo": "sha256",
+        "digest": "b6eed7aee71db18d6782e9f88cb95337147bcdca9fa33df75d321d2ca4f05049"
+      },
+      "file": "arch/cmsis/CMSIS/Core/Template/Device_M/Source/system_Device.c"
+    }
+  ]
+}
