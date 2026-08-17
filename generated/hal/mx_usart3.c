@@ -78,17 +78,13 @@ hal_uart_handle_t *mx_usart3_uart_init(void)
        PB3     ------>   USART3_TX
        PB4     ------>   USART3_RX
 
-    NOTE: alternate function AF7 is assumed for USART3 on PB3/PB4 (the common
-    mapping across most STM32 families for this peripheral/pin combination).
-    Double-check against the STM32C552xx datasheet alternate function table
-    if the link does not come up; the alternative on this device is AF11
-    (HAL_GPIO_AF11_USART3_TX / HAL_GPIO_AF11_USART3_RX).
+    Alternate function: AF11 (confirmed against the STM32C552xx datasheet).
   **/
   gpio_config.mode        = HAL_GPIO_MODE_ALTERNATE;
   gpio_config.output_type = HAL_GPIO_OUTPUT_PUSHPULL;
   gpio_config.pull        = HAL_GPIO_PULL_NO;
   gpio_config.speed       = HAL_GPIO_SPEED_FREQ_LOW;
-  gpio_config.alternate   = HAL_GPIO_AF7_USART3;
+  gpio_config.alternate   = HAL_GPIO_AF11_USART3;
   HAL_GPIO_Init(HAL_GPIOB, HAL_GPIO_PIN_3 | HAL_GPIO_PIN_4, &gpio_config);
 
   /* USART3 interrupt: enabled here so TX/RX can be driven fully asynchronously

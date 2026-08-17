@@ -73,7 +73,7 @@ Mappatura LED (anodo/catodo):
 - Baud rate: 115200, 8N1, nessun controllo di flusso
 - Gestione **interamente a interrupt** (nessun polling/timeout): trasmissione con `HAL_UART_Transmit_IT`, ricezione con `HAL_UART_ReceiveToIdle_IT` (chiude la ricezione sia a buffer pieno sia al rilevamento di linea idle, quindi va bene anche per messaggi di risposta di lunghezza variabile).
 
-> Nota: l'alternate function usata per USART3 su PB3/PB4 è **AF7** (`HAL_GPIO_AF7_USART3`), la mappatura più comune per questo tipo di pin sulle famiglie STM32. Da verificare contro la tabella "Alternate function" del datasheet STM32C552xx: se il link non si aggancia, l'alternativa su questo device è AF11 (basta cambiare `gpio_config.alternate` in `mx_usart3.c`).
+> Nota: l'alternate function usata per USART3 su PB3/PB4 è **AF11** (`HAL_GPIO_AF11_USART3`), confermata contro il datasheet STM32C552xx.
 
 ## Comportamento del firmware
 
