@@ -116,6 +116,7 @@ static const led_entry_t leds[LED_COUNT] =
 static uint8_t          usart3_rx_buf[USART3_RX_BUF_SIZE];
 static char              usart3_last_message[USART3_RX_BUF_SIZE + 1U];
 static volatile uint32_t usart3_message_ready = 0U;
+static volatile uint32_t usart3_rx_need_rearm = 0U;
 static char              usart3_tx_buf[USART3_TX_BUF_SIZE];
 
 /* Private functions prototype -----------------------------------------------*/
@@ -486,14 +487,21 @@ static uint32_t usart3_take_message(char *out_buf, uint32_t out_buf_size)
 }
 
 /**
-  * brief:  HAL_UART callback: fires from USART3_IRQHandler() when the reception armed
-  *         by usart3_arm_receive() completes, either because usart3_rx_buf filled up
-  *         or because the line went idle (rx_event == HAL_UART_RX_EVENT_IDLE) after a
-  *         shorter message - which is the normal case for a free-form reply.
+  * brief:  HAL_UART callback: fires from inside HAL_UART_IRQHandler() when the
+  *         reception armed by usart3_arm_receive() completes, either because
+  *         usart3_rx_buf filled up or because the line went idle
+  *         (rx_event == HAL_UART_RX_EVENT_IDLE) after a shorter message - which is
+  *         the normal case for a free-form reply.
+  *         NOTE: the HAL only moves huart->rx_state back to IDLE *after* this
+  *         callback returns, so calling HAL_UART_ReceiveToIdle_IT() from here would
+  *         always fail with HAL_BUSY. Just flag that a re-arm is needed; the actual
+  *         re-arm happens in USART3_IRQHandler(), once HAL_UART_IRQHandler() (and
+  *         therefore this callback) has returned and rx_state is IDLE again.
   * retval: none
   */
 void HAL_UART_RxCpltCallback(hal_uart_handle_t *huart, uint32_t size_byte, hal_uart_rx_event_types_t rx_event)
 {
+  (void)huart;
   (void)rx_event;
 
   uint32_t copy_len = size_byte;
@@ -512,18 +520,37 @@ void HAL_UART_RxCpltCallback(hal_uart_handle_t *huart, uint32_t size_byte, hal_u
   usart3_last_message[copy_len] = '\0';
 
   usart3_message_ready = 1U;
-
-  /* Re-arm reception right away: the link must keep listening at all times. */
-  (void)HAL_UART_ReceiveToIdle_IT(huart, usart3_rx_buf, USART3_RX_BUF_SIZE);
+  usart3_rx_need_rearm = 1U;
 }
 
 /**
-  * brief:  HAL_UART callback: fires from USART3_IRQHandler() on a line error (framing,
-  *         noise, overrun, ...). Re-arms reception so a transient glitch cannot
-  *         permanently stall the link.
+  * brief:  HAL_UART callback: fires from inside HAL_UART_IRQHandler() on a line error
+  *         (framing, noise, overrun, ...). Only flags that reception needs to be
+  *         re-armed (see HAL_UART_RxCpltCallback() note above); the actual re-arm
+  *         happens in USART3_IRQHandler() once rx_state is back to IDLE.
   * retval: none
   */
 void HAL_UART_ErrorCallback(hal_uart_handle_t *huart)
 {
-  (void)HAL_UART_ReceiveToIdle_IT(huart, usart3_rx_buf, USART3_RX_BUF_SIZE);
+  (void)huart;
+  usart3_rx_need_rearm = 1U;
+}
+
+/**
+  * brief:  USART3 global interrupt handler: services the peripheral, then re-arms
+  *         reception if HAL_UART_RxCpltCallback()/HAL_UART_ErrorCallback() flagged
+  *         it as needed (see their comments for why this can't be done in-line).
+  * retval: none
+  */
+void USART3_IRQHandler(void)
+{
+  hal_uart_handle_t *husart3 = mx_usart3_uart_gethandle();
+
+  HAL_UART_IRQHandler(husart3);
+
+  if (usart3_rx_need_rearm != 0U)
+  {
+    usart3_rx_need_rearm = 0U;
+    (void)HAL_UART_ReceiveToIdle_IT(husart3, usart3_rx_buf, USART3_RX_BUF_SIZE);
+  }
 }

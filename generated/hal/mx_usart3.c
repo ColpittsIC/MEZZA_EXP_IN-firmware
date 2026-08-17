@@ -115,10 +115,7 @@ hal_uart_handle_t *mx_usart3_uart_gethandle(void)
   return &hUSART3;
 }
 
-/******************************************************************************/
-/*                       USART3 IRQ Handler                                   */
-/******************************************************************************/
-void USART3_IRQHandler(void)
-{
-  HAL_UART_IRQHandler(&hUSART3);
-}
+/* NOTE: USART3_IRQHandler() is implemented in main.c, not here: it needs to
+   re-arm HAL_UART_ReceiveToIdle_IT() after servicing the interrupt (once
+   rx_state is back to IDLE), which requires access to the application's
+   RX buffer and re-arm flag. See main.c for details. */
