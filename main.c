@@ -62,6 +62,10 @@ typedef struct
 #define LED_ROW_COUNT            4U
 #define LED_COUNT                10U  /* DL2..DL11 */
 
+#define USART3_RX_BUF_SIZE       64U
+#define USART3_TX_BUF_SIZE       32U
+#define USART3_NO_MESSAGE_TEXT   "No-Message"
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static adc_channel_result_t adc_results[ADC_TOTAL_CHANNELS] =
@@ -103,6 +107,17 @@ static const led_entry_t leds[LED_COUNT] =
   { 0U, 3U, "DL11" }, /* anode=ROW1, cathode=ROW4 */
 };
 
+/* USART3 (PB3/PB4) link to the other microcontroller: TX and RX are both fully
+   interrupt-driven (no polling/timeout on this side). usart3_rx_buf is written
+   directly by the HAL from IRQ context, so it must live for as long as a
+   reception can be pending; usart3_last_message / usart3_message_ready form a
+   single-producer (ISR) / single-consumer (main loop) mailbox, made safe by
+   briefly masking the USART3 IRQ while it is consumed (see usart3_take_message). */
+static uint8_t          usart3_rx_buf[USART3_RX_BUF_SIZE];
+static char              usart3_last_message[USART3_RX_BUF_SIZE + 1U];
+static volatile uint32_t usart3_message_ready = 0U;
+static char              usart3_tx_buf[USART3_TX_BUF_SIZE];
+
 /* Private functions prototype -----------------------------------------------*/
 static void uart_send_string(hal_uart_handle_t *huart, const char *p_str);
 static void adc_test_error(hal_uart_handle_t *huart, const char *p_reason);
@@ -113,7 +128,11 @@ static void adc_send_results_uart(hal_uart_handle_t *huart);
 
 static void led_charlie_init(void);
 static void led_charlie_apply_step(uint32_t step);
-static void led_charlie_report_step(hal_uart_handle_t *huart, uint32_t step);
+static void led_charlie_report_step(hal_uart_handle_t *huart, uint32_t step, const char *p_usart3_msg);
+
+static void usart3_arm_receive(hal_uart_handle_t *husart3);
+static void usart3_send_ping(hal_uart_handle_t *husart3);
+static uint32_t usart3_take_message(char *out_buf, uint32_t out_buf_size);
 
 /**
   * brief:  The application entry point.
@@ -135,9 +154,10 @@ int main(void)
     /*
       * You can start your application code here
       */
-    hal_adc_handle_t  *hadc1  = mx_adc1_gethandle();
-    hal_adc_handle_t  *hadc2  = mx_adc2_gethandle();
-    hal_uart_handle_t *huart5 = mx_uart5_uart_gethandle();
+    hal_adc_handle_t  *hadc1   = mx_adc1_gethandle();
+    hal_adc_handle_t  *hadc2   = mx_adc2_gethandle();
+    hal_uart_handle_t *huart5  = mx_uart5_uart_gethandle();
+    hal_uart_handle_t *husart3 = mx_usart3_uart_gethandle();
 
     /* Diagnostic message sent as early as possible: if this never shows up on the
        terminal, the issue is on the UART link itself (wiring, baud rate, ground),
@@ -168,6 +188,11 @@ int main(void)
     led_charlie_init();
     uart_send_string(huart5, ">>> LED charlieplexing test ready (PB7/PC13/PA15/PC14) <<<\r\n");
 
+    /* USART3 link to the other MCU: arm the (interrupt-driven) receiver once;
+       from here on reception is entirely handled by HAL_UART_RxCpltCallback(). */
+    usart3_arm_receive(husart3);
+    uart_send_string(huart5, ">>> USART3 link ready (PB3 TX / PB4 RX) - sending PING every second <<<\r\n");
+
     uint32_t led_step = 0U;
 
     while (1)
@@ -186,9 +211,20 @@ int main(void)
 
       adc_send_results_uart(huart5);
 
+      /* Fire-and-forget: non-blocking send, the other MCU is expected to reply
+         at its own pace and its reply (if any) will show up on the LED line. */
+      usart3_send_ping(husart3);
+
       /* Light one LED at a time, in board order DL2..DL11, one per loop iteration. */
       led_charlie_apply_step(led_step);
-      led_charlie_report_step(huart5, led_step);
+
+      char usart3_msg[USART3_RX_BUF_SIZE];
+      const char *usart3_text = USART3_NO_MESSAGE_TEXT;
+      if (usart3_take_message(usart3_msg, sizeof(usart3_msg)) != 0U)
+      {
+        usart3_text = usart3_msg;
+      }
+      led_charlie_report_step(huart5, led_step, usart3_text);
       led_step = (led_step + 1U) % LED_COUNT;
 
       HAL_Delay(TEST_PERIOD_MS);
@@ -373,17 +409,121 @@ static void led_charlie_apply_step(uint32_t step)
 }
 
 /**
-  * brief:  Report over UART which LED is currently lit for the given step.
+  * brief:  Report over UART which LED is currently lit for the given step, with the
+  *         latest USART3 status (received message, or "No-Message") appended at the
+  *         end of the same line.
   * retval: none
   */
-static void led_charlie_report_step(hal_uart_handle_t *huart, uint32_t step)
+static void led_charlie_report_step(hal_uart_handle_t *huart, uint32_t step, const char *p_usart3_msg)
 {
   uint32_t high_idx = leds[step].anode_row;
   uint32_t low_idx  = leds[step].cathode_row;
-  char     line[112];
+  char     line[160];
 
-  int len = snprintf(line, sizeof(line), "LED test %2u/%u: %-5s ON  (%s=HIGH  %s=LOW  others Hi-Z)\r\n",
+  int len = snprintf(line, sizeof(line),
+                      "LED test %2u/%u: %-5s ON  (%s=HIGH  %s=LOW  others Hi-Z)  USART3: %s\r\n",
                       (unsigned int)(step + 1U), (unsigned int)LED_COUNT, leds[step].label,
-                      led_row_pins[high_idx].label, led_row_pins[low_idx].label);
+                      led_row_pins[high_idx].label, led_row_pins[low_idx].label, p_usart3_msg);
   (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+}
+
+/**
+  * brief:  Arm (or re-arm) an interrupt-driven, variable-length reception on USART3:
+  *         HAL_UART_RxCpltCallback() fires as soon as either usart3_rx_buf is full or
+  *         the line goes idle after some bytes were received - whichever comes first -
+  *         with no busy-waiting and no software timeout involved.
+  * retval: none
+  */
+static void usart3_arm_receive(hal_uart_handle_t *husart3)
+{
+  (void)HAL_UART_ReceiveToIdle_IT(husart3, usart3_rx_buf, USART3_RX_BUF_SIZE);
+}
+
+/**
+  * brief:  Send one "PING <n>" message on USART3 without blocking (interrupt-driven
+  *         transmission): the call returns immediately, actual bytes go out under
+  *         USART3 IRQ. usart3_tx_buf is static so it stays valid for the whole
+  *         transmission, well past this function's return.
+  * retval: none
+  */
+static void usart3_send_ping(hal_uart_handle_t *husart3)
+{
+  static uint32_t ping_counter = 0U;
+
+  int len = snprintf(usart3_tx_buf, sizeof(usart3_tx_buf), "PING %lu\r\n", (unsigned long)ping_counter);
+  ping_counter++;
+
+  (void)HAL_UART_Transmit_IT(husart3, usart3_tx_buf, (uint32_t)len);
+}
+
+/**
+  * brief:  Consume the last message received on USART3, if any, since the previous
+  *         call. The USART3 IRQ is briefly masked to make the read atomic with
+  *         respect to HAL_UART_RxCpltCallback().
+  * retval: 1 and *out_buf filled if a message was pending, 0 otherwise (out_buf
+  *         left untouched)
+  */
+static uint32_t usart3_take_message(char *out_buf, uint32_t out_buf_size)
+{
+  uint32_t got = 0U;
+
+  HAL_CORTEX_NVIC_DisableIRQ(USART3_IRQn);
+  if (usart3_message_ready != 0U)
+  {
+    size_t msg_len = strlen(usart3_last_message);
+    if (msg_len >= out_buf_size)
+    {
+      msg_len = out_buf_size - 1U;
+    }
+    memcpy(out_buf, usart3_last_message, msg_len);
+    out_buf[msg_len] = '\0';
+    usart3_message_ready = 0U;
+    got = 1U;
+  }
+  HAL_CORTEX_NVIC_EnableIRQ(USART3_IRQn);
+
+  return got;
+}
+
+/**
+  * brief:  HAL_UART callback: fires from USART3_IRQHandler() when the reception armed
+  *         by usart3_arm_receive() completes, either because usart3_rx_buf filled up
+  *         or because the line went idle (rx_event == HAL_UART_RX_EVENT_IDLE) after a
+  *         shorter message - which is the normal case for a free-form reply.
+  * retval: none
+  */
+void HAL_UART_RxCpltCallback(hal_uart_handle_t *huart, uint32_t size_byte, hal_uart_rx_event_types_t rx_event)
+{
+  (void)rx_event;
+
+  uint32_t copy_len = size_byte;
+  if (copy_len >= sizeof(usart3_last_message))
+  {
+    copy_len = (uint32_t)sizeof(usart3_last_message) - 1U;
+  }
+  memcpy(usart3_last_message, usart3_rx_buf, copy_len);
+
+  /* Trim a trailing CR/LF, if any, so it does not break the single-line report. */
+  while ((copy_len > 0U) && ((usart3_last_message[copy_len - 1U] == '\r') ||
+                             (usart3_last_message[copy_len - 1U] == '\n')))
+  {
+    copy_len--;
+  }
+  usart3_last_message[copy_len] = '\0';
+
+  usart3_message_ready = 1U;
+
+  /* Re-arm reception right away: the link must keep listening at all times. */
+  (void)HAL_UART_ReceiveToIdle_IT(huart, usart3_rx_buf, USART3_RX_BUF_SIZE);
+}
+
+/**
+  * brief:  HAL_UART callback: fires from USART3_IRQHandler() on a line error (framing,
+  *         noise, overrun, ...). Re-arms reception so a transient glitch cannot
+  *         permanently stall the link.
+  * retval: none
+  */
+void HAL_UART_ErrorCallback(hal_uart_handle_t *huart)
+{
+  (void)HAL_UART_ReceiveToIdle_IT(huart, usart3_rx_buf, USART3_RX_BUF_SIZE);
 }
