@@ -2,11 +2,12 @@
 
 Firmware di test per la scheda MEZZA_EXP_IN, basata sul microcontrollore **STM32C552CEU6** (famiglia STM32C5).
 
-Il firmware esegue tre test hardware in loop, riportando i risultati via UART:
+Il firmware esegue quattro test hardware in loop, riportando i risultati via UART:
 
 1. **Test ADC**: lettura ciclica di 10 ingressi analogici.
 2. **Test LED**: accensione sequenziale dei 10 LED pilotati in Charlieplexing.
 3. **Test USART3**: invio periodico di un messaggio verso l'altro microcontrollore e ricezione della sua risposta, interamente a interrupt.
+4. **Test SPI2**: scambio periodico di un byte full-duplex con l'altro microcontrollore (questa scheda è SPI Master), interamente a interrupt.
 
 ## Hardware
 
@@ -75,11 +76,28 @@ Mappatura LED (anodo/catodo):
 
 > Nota: l'alternate function usata per USART3 su PB3/PB4 è **AF11** (`HAL_GPIO_AF11_USART3`), confermata contro il datasheet STM32C552xx.
 
+### SPI2 - link verso l'altro microcontrollore
+
+| Segnale     | Pin  |
+|-------------|------|
+| SPI2_NSS/CS | PB12 |
+| SPI2_SCK    | PB13 |
+| SPI2_MISO   | PB14 |
+| SPI2_MOSI   | PB15 |
+
+- Alternate function: **AF5** (`HAL_GPIO_AF5_SPI2`)
+- Questa scheda è configurata come **SPI Master**; l'altra scheda deve essere **SPI Slave**.
+- Modalità SPI 0 (CPOL=0, CPHA=0), 8 bit/frame, MSB first, NSS gestito in hardware dal master (`HAL_SPI_NSS_PIN_MGMT_OUTPUT`, un impulso di CS per ogni transfer).
+- Baud rate: PCLK1/64 (~2.25 MHz con PCLK1 a 144 MHz).
+- Gestione **interamente a interrupt** (`HAL_SPI_TransmitReceive_IT`), un solo transfer da 1 byte al secondo.
+- **Nota sul pipelining full-duplex**: essendo la SPI sincrona e full-duplex, il byte ricevuto in un dato transfer è quello che lo slave aveva già preparato *prima* dell'inizio del transfer stesso, cioè corrisponde alla risposta al byte del ciclo *precedente*, non a quello appena inviato. Non è un baco: è una proprietà normale dei protocolli SPI full-duplex (identica a un registro a scorrimento).
+- Il modulo SPI non era selezionato nel progetto CubeMX originale: `USE_HAL_SPI_MODULE` è stato abilitato a mano in `generated/hal/stm32c5xx_hal_conf.h`, e sia `generated/hal/mx_spi2.c` sia il driver `stm32c5xx_drivers/hal/stm32c5xx_hal_spi.c` sono referenziati direttamente in `cmake/files.cmake` (stesso motivo di USART3, vedi sotto).
+
 ## Comportamento del firmware
 
 All'avvio (`main.c`):
 
-1. Inizializzazione del sistema (clock, ADC1, ADC2, UART5, USART3) tramite `mx_system_init()`.
+1. Inizializzazione del sistema (clock, ADC1, ADC2, UART5, USART3, SPI2) tramite `mx_system_init()`.
 2. Messaggio di boot su UART5.
 3. Attivazione e calibrazione di ADC1 e ADC2.
 4. Inizializzazione dei 4 pin di Charlieplexing (tutti a riposo in Hi-Z, LED spenti).
@@ -90,6 +108,7 @@ Poi, in loop continuo (1 iterazione al secondo):
 1. Lettura dei 10 canali ADC (modalità discontinua, 1 rank per trigger) e stampa via UART di raw, tensione al pin ADC (mV) e tensione reale in ingresso (V).
 2. Invio non bloccante (`HAL_UART_Transmit_IT`) di un messaggio `PING <n>` su USART3 verso l'altro microcontrollore.
 3. Accensione di **un solo LED alla volta**, in ordine DL2 -> DL11 (poi si ripete), con stampa via UART di quale LED è acceso e quale coppia di pin lo pilota. Sulla stessa riga viene riportato anche l'ultimo messaggio ricevuto su USART3 dall'ultima iterazione (`USART3: <testo>`), oppure `USART3: No-Message` se non è arrivato nulla nel frattempo. La ricezione vera e propria avviene in background, in interrupt (`HAL_UART_RxCpltCallback`), quindi non blocca né rallenta le altre operazioni.
+4. Report del transfer SPI2 completato durante l'iterazione precedente (`SPI2 test: sent 0x.., received 0x..`), poi avvio non bloccante (`HAL_SPI_TransmitReceive_IT`) di un nuovo transfer da 1 byte.
 
 In caso di errore su un passo di inizializzazione o di conversione ADC, il firmware stampa un messaggio diagnostico su UART (con indicazione del canale/rank e del codice di stato HAL) e si ferma.
 
@@ -101,6 +120,7 @@ Progetto generato con STM32CubeMX (nuovo modello di generazione basato su CMake)
 - `generated/hal/mx_adc1.c`, `mx_adc2.c` — inizializzazione ADC1/ADC2, incluse le configurazioni canale/sequencer completate a mano (non generabili automaticamente da CubeMX in questo progetto).
 - `generated/hal/mx_uart5.c` — inizializzazione UART5 (generata da CubeMX, non modificata).
 - `generated/hal/mx_usart3.c` — inizializzazione USART3 (scritta a mano, non essendo stata selezionata nel progetto CubeMX originale; per questo è referenziata direttamente in `cmake/files.cmake` invece che nel meccanismo di generazione CMSIS-pack).
+- `generated/hal/mx_spi2.c` — inizializzazione SPI2 Master (scritta a mano, stesso motivo di USART3 sopra; anche il driver `stm32c5xx_hal_spi.c` è referenziato a mano in `cmake/files.cmake` per lo stesso motivo).
 - `stm32c5xx_drivers/` — driver HAL/LL STM32C5 (libreria ST, non modificare).
 - `stm32c5xx_dfp/`, `arch/cmsis/` — CMSIS e device support pack STM32C5 (libreria ST, non modificare).
 - `cmake/`, `CMakeLists.txt`, `CMakePresets.json` — configurazione build CMake.

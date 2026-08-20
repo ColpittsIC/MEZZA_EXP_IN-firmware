@@ -33,6 +33,7 @@ extern "C" {
 #include "mx_cortex_nvic.h"
 #include "mx_icache.h"
 #include "mx_rcc.h"
+#include "mx_spi2.h"
 #include "mx_uart5.h"
 #include "mx_usart3.h"
 

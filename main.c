@@ -119,6 +119,21 @@ static volatile uint32_t usart3_message_ready = 0U;
 static volatile uint32_t usart3_rx_need_rearm = 0U;
 static char              usart3_tx_buf[USART3_TX_BUF_SIZE];
 
+/* SPI2 (PB12..PB15) link to the other microcontroller: this board is SPI Master,
+   the other board is expected to be SPI Slave. One full-duplex byte is exchanged
+   per second, fully interrupt-driven (HAL_SPI_TransmitReceive_IT); the transfer
+   is only ever (re-)started from the main loop, once per second, so - unlike
+   USART3 - there is no need to re-arm anything from inside the completion
+   callback: by the time the next transfer is kicked off, the previous one is
+   long finished and the SPI state is back to idle.
+   NOTE (full-duplex pipelining): the byte read back on any given transfer is
+   whatever the slave had already loaded *before* that transfer started, i.e. it
+   reflects the slave's reply to the *previous* byte we sent, not the one just
+   sent - this is a normal property of synchronous full-duplex SPI, not a bug. */
+static volatile uint32_t spi2_xfer_complete = 0U;
+static uint8_t           spi2_tx_byte = 0U;
+static uint8_t           spi2_rx_byte = 0U;
+
 /* Private functions prototype -----------------------------------------------*/
 static void uart_send_string(hal_uart_handle_t *huart, const char *p_str);
 static void adc_test_error(hal_uart_handle_t *huart, const char *p_reason);
@@ -134,6 +149,9 @@ static void led_charlie_report_step(hal_uart_handle_t *huart, uint32_t step, con
 static void usart3_arm_receive(hal_uart_handle_t *husart3);
 static void usart3_send_ping(hal_uart_handle_t *husart3);
 static uint32_t usart3_take_message(char *out_buf, uint32_t out_buf_size);
+
+static void spi2_start_xfer(hal_spi_handle_t *hspi2);
+static void spi2_report(hal_uart_handle_t *huart);
 
 /**
   * brief:  The application entry point.
@@ -159,6 +177,7 @@ int main(void)
     hal_adc_handle_t  *hadc2   = mx_adc2_gethandle();
     hal_uart_handle_t *huart5  = mx_uart5_uart_gethandle();
     hal_uart_handle_t *husart3 = mx_usart3_uart_gethandle();
+    hal_spi_handle_t  *hspi2   = mx_spi2_gethandle();
 
     /* Diagnostic message sent as early as possible: if this never shows up on the
        terminal, the issue is on the UART link itself (wiring, baud rate, ground),
@@ -194,6 +213,9 @@ int main(void)
     usart3_arm_receive(husart3);
     uart_send_string(huart5, ">>> USART3 link ready (PB3 TX / PB4 RX) - sending PING every second <<<\r\n");
 
+    uart_send_string(huart5, ">>> SPI2 link ready (Master, PB12 CS / PB13 SCK / PB14 MISO / PB15 MOSI) "
+                             "- exchanging 1 byte every second <<<\r\n");
+
     uint32_t led_step = 0U;
 
     while (1)
@@ -227,6 +249,11 @@ int main(void)
       }
       led_charlie_report_step(huart5, led_step, usart3_text);
       led_step = (led_step + 1U) % LED_COUNT;
+
+      /* Report the SPI2 transfer that completed during the previous iteration,
+         then kick off a new one (non-blocking) for this iteration. */
+      spi2_report(huart5);
+      spi2_start_xfer(hspi2);
 
       HAL_Delay(TEST_PERIOD_MS);
     }
@@ -553,4 +580,75 @@ void USART3_IRQHandler(void)
     usart3_rx_need_rearm = 0U;
     (void)HAL_UART_ReceiveToIdle_IT(husart3, usart3_rx_buf, USART3_RX_BUF_SIZE);
   }
+}
+
+/**
+  * brief:  Kick off one non-blocking full-duplex SPI2 byte exchange: sends the next
+  *         counter value and, once complete, HAL_SPI_TxRxCpltCallback() will update
+  *         spi2_rx_byte with whatever the slave shifted out during this transfer.
+  * retval: none
+  */
+static void spi2_start_xfer(hal_spi_handle_t *hspi2)
+{
+  static uint8_t counter = 0U;
+
+  spi2_tx_byte = counter;
+  counter++;
+
+  spi2_xfer_complete = 0U;
+  (void)HAL_SPI_TransmitReceive_IT(hspi2, &spi2_tx_byte, &spi2_rx_byte, 1U);
+}
+
+/**
+  * brief:  Report over UART the outcome of the SPI2 transfer started on the
+  *         previous iteration (or "no data yet" before the first one completes).
+  * retval: none
+  */
+static void spi2_report(hal_uart_handle_t *huart)
+{
+  char line[80];
+  int  len;
+
+  if (spi2_xfer_complete != 0U)
+  {
+    len = snprintf(line, sizeof(line), "SPI2 test: sent 0x%02X, received 0x%02X\r\n",
+                   spi2_tx_byte, spi2_rx_byte);
+  }
+  else
+  {
+    len = snprintf(line, sizeof(line), "SPI2 test: sent 0x%02X, received: no data yet\r\n", spi2_tx_byte);
+  }
+  (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+}
+
+/**
+  * brief:  HAL_SPI callback: fires from inside HAL_SPI_IRQHandler() when the transfer
+  *         started by spi2_start_xfer() completes. Only updates spi2_xfer_complete;
+  *         spi2_rx_byte itself has already been written directly by the HAL.
+  * retval: none
+  */
+void HAL_SPI_TxRxCpltCallback(hal_spi_handle_t *hspi)
+{
+  (void)hspi;
+  spi2_xfer_complete = 1U;
+}
+
+/**
+  * brief:  HAL_SPI callback: fires from inside HAL_SPI_IRQHandler() on a transfer
+  *         error (overrun, mode fault, CRC, ...). The next iteration's
+  *         spi2_start_xfer() will simply start a fresh transfer.
+  * retval: none
+  */
+void HAL_SPI_ErrorCallback(hal_spi_handle_t *hspi)
+{
+  (void)hspi;
+}
+
+/**
+  * brief:  SPI2 global interrupt handler.
+  * retval: none
+  */
+void SPI2_IRQHandler(void)
+{
+  HAL_SPI_IRQHandler(mx_spi2_gethandle());
 }
