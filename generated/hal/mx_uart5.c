@@ -85,11 +85,19 @@ hal_uart_handle_t *mx_uart5_uart_init(void)
   gpio_config.alternate   = HAL_GPIO_AF_14;
   HAL_GPIO_Init(HAL_GPIOB, HAL_GPIO_PIN_5 | HAL_GPIO_PIN_6, &gpio_config);
 
+  /* UART5 interrupt: enabled so the debug link can also receive commands from
+     the PC (e.g. the ADC quality test script) via HAL_UART_ReceiveToIdle_IT,
+     without blocking/polling. */
+  HAL_CORTEX_NVIC_SetPriority(UART5_IRQn, HAL_CORTEX_NVIC_PREEMP_PRIORITY_6, HAL_CORTEX_NVIC_SUB_PRIORITY_0);
+  HAL_CORTEX_NVIC_EnableIRQ(UART5_IRQn);
+
   return &hUART5;
 }
 
 void mx_uart5_uart_deinit(void)
 {
+  HAL_CORTEX_NVIC_DisableIRQ(UART5_IRQn);
+
 (void)HAL_UART_DeInit(&hUART5);
 
   HAL_RCC_UART5_Reset();

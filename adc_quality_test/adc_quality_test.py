@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""
+ADC quality test - PC-side controller / logger.
+
+Talks to the MEZZA_EXP_IN board over UART5 (the same debug link used for the
+normal demo firmware) while it is built and flashed with TEST_ADC_QUALITY = 1
+(see main.c). For each (ADC, channel, nominal voltage) combination the board:
+
+  1. Sends "READY,ADC<n>,<pin>,<v>V" and then blocks, waiting for anything to
+     arrive on UART5.
+  2. Once this script sends "GO", the board replies "START,ADC<n>,<pin>,<v>V,<count>"
+     followed by <count> CSV lines "<index>,<raw>,<adc_mV>,<vin_mV>", then "END,...".
+  3. This repeats for every combination; the board finally sends "ALL_DONE".
+
+This script:
+  - Prints every line it does not specifically recognize (e.g. the firmware's
+    boot messages), so nothing is silently swallowed.
+  - On each READY, prompts the operator to set up the reference voltage on the
+    given channel, waits for Enter, then tells the board to go ahead.
+  - Saves each completed series to its own CSV file, named
+    "ADC<n>_<pin>_<v>V.csv", inside the --outdir folder (default: "data",
+    next to this script).
+"""
+
+import argparse
+import csv
+import sys
+import time
+from pathlib import Path
+
+import serial
+
+DEFAULT_BAUD = 115200
+DEFAULT_OUTDIR = Path(__file__).resolve().parent / "data"
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="MEZZA_EXP_IN ADC quality test controller")
+    parser.add_argument("port", help="Serial port connected to UART5 (e.g. COM5 or /dev/ttyUSB0)")
+    parser.add_argument("--baud", type=int, default=DEFAULT_BAUD, help=f"Baud rate (default: {DEFAULT_BAUD})")
+    parser.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR,
+                         help=f"Folder where the CSV files are saved (default: {DEFAULT_OUTDIR})")
+    return parser.parse_args()
+
+
+def read_line(ser: serial.Serial) -> str:
+    """Block until one full line arrives on the serial port, return it stripped."""
+    raw = ser.readline()
+    return raw.decode("ascii", errors="replace").strip()
+
+
+def handle_ready(ser: serial.Serial, fields: list[str]) -> None:
+    """fields = ["READY", "ADC<n>", "<pin>", "<v>V"]"""
+    adc_label, pin_label, voltage_label = fields[1], fields[2], fields[3]
+    print(f"\n=== {adc_label} / {pin_label} / {voltage_label} ===")
+    input(f"Collega/imposta il riferimento a {voltage_label} su {pin_label} ({adc_label}), poi premi Enter... ")
+    ser.write(b"GO\r\n")
+
+
+def handle_start(ser: serial.Serial, fields: list[str], outdir: Path) -> None:
+    """fields = ["START", "ADC<n>", "<pin>", "<v>V", "<count>"]"""
+    adc_label, pin_label, voltage_label, count_str = fields[1], fields[2], fields[3], fields[4]
+    count = int(count_str)
+
+    outdir.mkdir(parents=True, exist_ok=True)
+    filename = outdir / f"{adc_label}_{pin_label}_{voltage_label}.csv"
+
+    print(f"Acquisizione di {count} campioni -> {filename.name} ...", end="", flush=True)
+    t_start = time.monotonic()
+
+    with open(filename, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["sample_index", "raw", "adc_mV", "vin_mV"])
+
+        received = 0
+        while received < count:
+            line = read_line(ser)
+            if not line:
+                continue
+            if line.startswith("END,"):
+                print(f"\n  ATTENZIONE: END ricevuto dopo solo {received}/{count} campioni.")
+                break
+            parts = line.split(",")
+            if len(parts) != 4:
+                print(f"\n  Riga inattesa ignorata: {line!r}")
+                continue
+            writer.writerow(parts)
+            received += 1
+            if received % 1000 == 0:
+                print(".", end="", flush=True)
+
+    elapsed = time.monotonic() - t_start
+    print(f" fatto ({received} campioni, {elapsed:.1f} s).")
+
+
+def handle_end(fields: list[str]) -> None:
+    """fields = ["END", "ADC<n>", "<pin>", "<v>V"] - only reached in the normal
+    case where handle_start() already consumed exactly <count> samples and the
+    firmware's END line is read here, right after, by the main loop."""
+    adc_label, pin_label, voltage_label = fields[1], fields[2], fields[3]
+    print(f"Serie completata: {adc_label} / {pin_label} / {voltage_label}")
+
+
+def main() -> int:
+    args = parse_args()
+
+    print(f"Apertura {args.port} @ {args.baud} baud...")
+    with serial.Serial(args.port, args.baud, timeout=None) as ser:
+        print("Connesso. In attesa dei messaggi dalla scheda (Ctrl+C per interrompere).\n")
+
+        while True:
+            line = read_line(ser)
+            if not line:
+                continue
+
+            fields = line.split(",")
+
+            if fields[0] == "READY":
+                handle_ready(ser, fields)
+            elif fields[0] == "START":
+                handle_start(ser, fields, args.outdir)
+            elif fields[0] == "END":
+                handle_end(fields)
+            elif fields[0] == "ALL_DONE":
+                print("\n*** Test completato: tutte le combinazioni sono state acquisite. ***")
+                return 0
+            else:
+                # Firmware boot/status messages, or anything else not part of the
+                # READY/START/.../END/ALL_DONE protocol: just show them.
+                print(line)
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print("\nInterrotto dall'utente.")
+        sys.exit(1)

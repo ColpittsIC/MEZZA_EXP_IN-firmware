@@ -19,6 +19,23 @@
 #include <stdio.h>
 #include <string.h>
 
+/* ===========================================================================
+   BUILD MODE FLAGS - set before building, then reflash.
+   =========================================================================== */
+
+/* 0 = normal demo firmware (ADC/LED/USART3/SPI2 loop, this file's original
+       behaviour).
+   1 = run the ADC quality-test procedure selected by ADC_QUALITY_TEST_ID
+       instead: the other tests (LED, USART3, SPI2) are not started, and
+       main() never returns to the normal loop. */
+#define TEST_ADC_QUALITY         0U
+
+/* Which ADC quality-test procedure to run when TEST_ADC_QUALITY == 1.
+   Only TEST_1 exists today; the value/dispatch is kept so more can be added
+   later (e.g. TEST_2 for a different acquisition pattern) without reworking
+   this switch. */
+#define ADC_QUALITY_TEST_ID      1U
+
 /* Private typedef -----------------------------------------------------------*/
 typedef struct
 {
@@ -27,6 +44,14 @@ typedef struct
   int32_t     adc_mv;      /* Voltage measured at the ADC pin (mV)                */
   int32_t     input_mv;    /* Voltage at the board input, before attenuation (mV) */
 } adc_channel_result_t;
+
+typedef struct
+{
+  uint8_t     adc_number;   /* 1 or 2 (which physical ADC instance), for labels only */
+  uint8_t     channel_idx;  /* 0-based index (= sequencer rank - 1) within that ADC's
+                                existing regular sequence configured in mx_adc1.c/mx_adc2.c */
+  const char *pin_label;    /* e.g. "PA0", for messages and for the PC script's filenames */
+} adc_quality_channel_t;
 
 typedef struct
 {
@@ -66,6 +91,21 @@ typedef struct
 #define USART3_TX_BUF_SIZE       32U
 #define USART3_NO_MESSAGE_TEXT   "No-Message"
 
+/* UART5 command channel (used by the ADC quality test to receive "go ahead"
+   commands from the PC script; content is currently ignored, only the fact
+   that *something* was received matters - see uart5_cmd_wait_for_command()). */
+#define UART5_CMD_RX_BUF_SIZE    32U
+
+/* ADC quality test (TEST_1): number of samples acquired per (channel, voltage)
+   point, and the list of nominal voltages the operator is expected to apply
+   at each step (labels only - the firmware has no way to verify the actual
+   voltage, it just reports what it measures). */
+#define ADC_QUALITY_SAMPLES_PER_POINT   10000U
+#if TEST_ADC_QUALITY
+static const uint32_t adc_quality_voltages_v[] = { 0U, 2U, 4U, 6U, 8U, 10U };
+#define ADC_QUALITY_VOLTAGE_COUNT       (sizeof(adc_quality_voltages_v) / sizeof(adc_quality_voltages_v[0]))
+#endif /* TEST_ADC_QUALITY */
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static adc_channel_result_t adc_results[ADC_TOTAL_CHANNELS] =
@@ -82,6 +122,7 @@ static adc_channel_result_t adc_results[ADC_TOTAL_CHANNELS] =
   { "PB1 / ADC2_IN7", 0, 0, 0 },
 };
 
+#if !TEST_ADC_QUALITY
 /* Charlieplexing drive pins: index order defines the (high,low) pairs below. */
 static const led_row_pin_t led_row_pins[LED_ROW_COUNT] =
 {
@@ -106,6 +147,7 @@ static const led_entry_t leds[LED_COUNT] =
   { 3U, 2U, "DL10" }, /* anode=ROW4, cathode=ROW3 */
   { 0U, 3U, "DL11" }, /* anode=ROW1, cathode=ROW4 */
 };
+#endif /* !TEST_ADC_QUALITY */
 
 /* USART3 (PB3/PB4) link to the other microcontroller: TX and RX are both fully
    interrupt-driven (no polling/timeout on this side). usart3_rx_buf is written
@@ -117,7 +159,9 @@ static uint8_t          usart3_rx_buf[USART3_RX_BUF_SIZE];
 static char              usart3_last_message[USART3_RX_BUF_SIZE + 1U];
 static volatile uint32_t usart3_message_ready = 0U;
 static volatile uint32_t usart3_rx_need_rearm = 0U;
+#if !TEST_ADC_QUALITY
 static char              usart3_tx_buf[USART3_TX_BUF_SIZE];
+#endif /* !TEST_ADC_QUALITY */
 
 /* SPI2 (PB12..PB15) link to the other microcontroller: this board is SPI Master,
    the other board is expected to be SPI Slave. One full-duplex byte is exchanged
@@ -131,8 +175,29 @@ static char              usart3_tx_buf[USART3_TX_BUF_SIZE];
    reflects the slave's reply to the *previous* byte we sent, not the one just
    sent - this is a normal property of synchronous full-duplex SPI, not a bug. */
 static volatile uint32_t spi2_xfer_complete = 0U;
+#if !TEST_ADC_QUALITY
 static uint8_t           spi2_tx_byte = 0U;
 static uint8_t           spi2_rx_byte = 0U;
+#endif /* !TEST_ADC_QUALITY */
+
+/* UART5 command channel: interrupt-driven reception of "go ahead" commands from
+   the PC (ADC quality test script), same mailbox pattern as USART3 above. */
+static uint8_t           uart5_cmd_rx_buf[UART5_CMD_RX_BUF_SIZE];
+static volatile uint32_t uart5_cmd_ready = 0U;
+static volatile uint32_t uart5_rx_need_rearm = 0U;
+
+#if TEST_ADC_QUALITY
+/* ADC quality test (TEST_1): the 10 channels under test, in the order they will
+   be exercised - ADC1 rank1..8 (PA0..PA7), then ADC2 rank1..2 (PB0..PB1),
+   matching the sequencer configuration in mx_adc1.c / mx_adc2.c. */
+static const adc_quality_channel_t adc_quality_channels[] =
+{
+  { 1U, 0U, "PA0" }, { 1U, 1U, "PA1" }, { 1U, 2U, "PA2" }, { 1U, 3U, "PA3" },
+  { 1U, 4U, "PA4" }, { 1U, 5U, "PA5" }, { 1U, 6U, "PA6" }, { 1U, 7U, "PA7" },
+  { 2U, 0U, "PB0" }, { 2U, 1U, "PB1" },
+};
+#define ADC_QUALITY_CHANNEL_COUNT (sizeof(adc_quality_channels) / sizeof(adc_quality_channels[0]))
+#endif /* TEST_ADC_QUALITY */
 
 /* Private functions prototype -----------------------------------------------*/
 static void uart_send_string(hal_uart_handle_t *huart, const char *p_str);
@@ -140,6 +205,7 @@ static void adc_test_error(hal_uart_handle_t *huart, const char *p_reason);
 static const char *hal_status_to_str(hal_status_t status);
 static uint32_t adc_read_group(hal_uart_handle_t *huart, const char *p_adc_name, hal_adc_handle_t *hadc,
                                 uint8_t nb_channels, adc_channel_result_t *p_results);
+#if !TEST_ADC_QUALITY
 static void adc_send_results_uart(hal_uart_handle_t *huart);
 
 static void led_charlie_init(void);
@@ -152,6 +218,13 @@ static uint32_t usart3_take_message(char *out_buf, uint32_t out_buf_size);
 
 static void spi2_start_xfer(hal_spi_handle_t *hspi2);
 static void spi2_report(hal_uart_handle_t *huart);
+#endif /* !TEST_ADC_QUALITY */
+
+#if TEST_ADC_QUALITY
+static void uart5_cmd_arm_receive(hal_uart_handle_t *huart5);
+static void uart5_cmd_wait_for_command(void);
+static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2);
+#endif /* TEST_ADC_QUALITY */
 
 /**
   * brief:  The application entry point.
@@ -176,8 +249,10 @@ int main(void)
     hal_adc_handle_t  *hadc1   = mx_adc1_gethandle();
     hal_adc_handle_t  *hadc2   = mx_adc2_gethandle();
     hal_uart_handle_t *huart5  = mx_uart5_uart_gethandle();
+#if !TEST_ADC_QUALITY
     hal_uart_handle_t *husart3 = mx_usart3_uart_gethandle();
     hal_spi_handle_t  *hspi2   = mx_spi2_gethandle();
+#endif /* !TEST_ADC_QUALITY */
 
     /* Diagnostic message sent as early as possible: if this never shows up on the
        terminal, the issue is on the UART link itself (wiring, baud rate, ground),
@@ -202,7 +277,31 @@ int main(void)
       adc_test_error(huart5, "ADC2 Calibrate failed");
     }
 
-    uart_send_string(huart5, ">>> ADC1/ADC2 activated and calibrated - starting measurement loop <<<\r\n");
+    uart_send_string(huart5, ">>> ADC1/ADC2 activated and calibrated <<<\r\n");
+
+#if TEST_ADC_QUALITY
+
+    /* ADC quality test mode: LED/USART3/SPI2 are intentionally NOT started here,
+       to keep the board quiet (no extra GPIO/bus activity) while acquiring
+       precision ADC data. UART5 is repurposed to also receive short commands
+       from the PC script (any received data is treated as "go ahead"). */
+    uart5_cmd_arm_receive(huart5);
+    uart_send_string(huart5, ">>> TEST_ADC_QUALITY mode - running TEST_1 <<<\r\n");
+
+#if (ADC_QUALITY_TEST_ID == 1U)
+    adc_quality_run_test_1(huart5, hadc1, hadc2);
+#else
+#error "Unknown ADC_QUALITY_TEST_ID"
+#endif
+
+    uart_send_string(huart5, "\r\n>>> ADC quality test COMPLETE <<<\r\n");
+    while (1)
+    {
+    }
+
+#else /* !TEST_ADC_QUALITY : normal demo firmware */
+
+    uart_send_string(huart5, ">>> starting measurement loop <<<\r\n");
 
     /* Charlieplexed LED test: all 4 drive pins start in Hi-Z (LEDs off). */
     led_charlie_init();
@@ -257,6 +356,8 @@ int main(void)
 
       HAL_Delay(TEST_PERIOD_MS);
     }
+
+#endif /* TEST_ADC_QUALITY */
   }
 } /* end main */
 
@@ -345,6 +446,11 @@ static uint32_t adc_read_group(hal_uart_handle_t *huart, const char *p_adc_name,
 
   return 1U;
 }
+
+/* The following helpers only serve the normal demo loop (LED/USART3-ping/pretty-
+   printed ADC dump); they are compiled out in the ADC quality test build so that
+   build stays warning-free about unused static functions. */
+#if !TEST_ADC_QUALITY
 
 /**
   * brief:  Format and send the last conversion results as plain text over UART5.
@@ -513,54 +619,82 @@ static uint32_t usart3_take_message(char *out_buf, uint32_t out_buf_size)
   return got;
 }
 
+#endif /* !TEST_ADC_QUALITY */
+
 /**
-  * brief:  HAL_UART callback: fires from inside HAL_UART_IRQHandler() when the
-  *         reception armed by usart3_arm_receive() completes, either because
-  *         usart3_rx_buf filled up or because the line went idle
-  *         (rx_event == HAL_UART_RX_EVENT_IDLE) after a shorter message - which is
-  *         the normal case for a free-form reply.
+  * brief:  HAL_UART callback: fires from inside HAL_UART_IRQHandler() when a
+  *         reception armed by usart3_arm_receive() or uart5_cmd_arm_receive()
+  *         completes, either because the RX buffer filled up or because the line
+  *         went idle (rx_event == HAL_UART_RX_EVENT_IDLE) after a shorter message.
+  *         This single callback is shared by every UART instance (that is how this
+  *         HAL is designed), so it dispatches on which handle fired.
   *         NOTE: the HAL only moves huart->rx_state back to IDLE *after* this
   *         callback returns, so calling HAL_UART_ReceiveToIdle_IT() from here would
   *         always fail with HAL_BUSY. Just flag that a re-arm is needed; the actual
-  *         re-arm happens in USART3_IRQHandler(), once HAL_UART_IRQHandler() (and
-  *         therefore this callback) has returned and rx_state is IDLE again.
+  *         re-arm happens in USART3_IRQHandler()/UART5_IRQHandler(), once
+  *         HAL_UART_IRQHandler() (and therefore this callback) has returned and
+  *         rx_state is IDLE again.
   * retval: none
   */
 void HAL_UART_RxCpltCallback(hal_uart_handle_t *huart, uint32_t size_byte, hal_uart_rx_event_types_t rx_event)
 {
-  (void)huart;
   (void)rx_event;
 
-  uint32_t copy_len = size_byte;
-  if (copy_len >= sizeof(usart3_last_message))
+  if (huart == mx_usart3_uart_gethandle())
   {
-    copy_len = (uint32_t)sizeof(usart3_last_message) - 1U;
-  }
-  memcpy(usart3_last_message, usart3_rx_buf, copy_len);
+    uint32_t copy_len = size_byte;
+    if (copy_len >= sizeof(usart3_last_message))
+    {
+      copy_len = (uint32_t)sizeof(usart3_last_message) - 1U;
+    }
+    memcpy(usart3_last_message, usart3_rx_buf, copy_len);
 
-  /* Trim a trailing CR/LF, if any, so it does not break the single-line report. */
-  while ((copy_len > 0U) && ((usart3_last_message[copy_len - 1U] == '\r') ||
-                             (usart3_last_message[copy_len - 1U] == '\n')))
+    /* Trim a trailing CR/LF, if any, so it does not break the single-line report. */
+    while ((copy_len > 0U) && ((usart3_last_message[copy_len - 1U] == '\r') ||
+                               (usart3_last_message[copy_len - 1U] == '\n')))
+    {
+      copy_len--;
+    }
+    usart3_last_message[copy_len] = '\0';
+
+    usart3_message_ready = 1U;
+    usart3_rx_need_rearm = 1U;
+  }
+  else if (huart == mx_uart5_uart_gethandle())
   {
-    copy_len--;
+    /* ADC quality test command channel: content is irrelevant, only the fact
+       that something was received matters (see uart5_cmd_wait_for_command()). */
+    uart5_cmd_ready = 1U;
+    uart5_rx_need_rearm = 1U;
   }
-  usart3_last_message[copy_len] = '\0';
-
-  usart3_message_ready = 1U;
-  usart3_rx_need_rearm = 1U;
+  else
+  {
+    /* Unknown handle: nothing to do. */
+  }
 }
 
 /**
   * brief:  HAL_UART callback: fires from inside HAL_UART_IRQHandler() on a line error
-  *         (framing, noise, overrun, ...). Only flags that reception needs to be
-  *         re-armed (see HAL_UART_RxCpltCallback() note above); the actual re-arm
-  *         happens in USART3_IRQHandler() once rx_state is back to IDLE.
+  *         (framing, noise, overrun, ...) on any UART instance. Only flags that
+  *         reception needs to be re-armed (see HAL_UART_RxCpltCallback() note
+  *         above); the actual re-arm happens in the matching IRQHandler() once
+  *         rx_state is back to IDLE.
   * retval: none
   */
 void HAL_UART_ErrorCallback(hal_uart_handle_t *huart)
 {
-  (void)huart;
-  usart3_rx_need_rearm = 1U;
+  if (huart == mx_usart3_uart_gethandle())
+  {
+    usart3_rx_need_rearm = 1U;
+  }
+  else if (huart == mx_uart5_uart_gethandle())
+  {
+    uart5_rx_need_rearm = 1U;
+  }
+  else
+  {
+    /* Unknown handle: nothing to do. */
+  }
 }
 
 /**
@@ -581,6 +715,28 @@ void USART3_IRQHandler(void)
     (void)HAL_UART_ReceiveToIdle_IT(husart3, usart3_rx_buf, USART3_RX_BUF_SIZE);
   }
 }
+
+/**
+  * brief:  UART5 global interrupt handler: services the peripheral (both the debug
+  *         TX and, when TEST_ADC_QUALITY is active, the command RX), then re-arms
+  *         reception if flagged as needed - same reasoning as USART3_IRQHandler().
+  * retval: none
+  */
+void UART5_IRQHandler(void)
+{
+  hal_uart_handle_t *huart5 = mx_uart5_uart_gethandle();
+
+  HAL_UART_IRQHandler(huart5);
+
+  if (uart5_rx_need_rearm != 0U)
+  {
+    uart5_rx_need_rearm = 0U;
+    (void)HAL_UART_ReceiveToIdle_IT(huart5, uart5_cmd_rx_buf, UART5_CMD_RX_BUF_SIZE);
+  }
+}
+
+/* SPI2 test helpers: normal demo loop only, see the note above adc_send_results_uart(). */
+#if !TEST_ADC_QUALITY
 
 /**
   * brief:  Kick off one non-blocking full-duplex SPI2 byte exchange: sends the next
@@ -621,6 +777,8 @@ static void spi2_report(hal_uart_handle_t *huart)
   (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 }
 
+#endif /* !TEST_ADC_QUALITY */
+
 /**
   * brief:  HAL_SPI callback: fires from inside HAL_SPI_IRQHandler() when the transfer
   *         started by spi2_start_xfer() completes. Only updates spi2_xfer_complete;
@@ -652,3 +810,108 @@ void SPI2_IRQHandler(void)
 {
   HAL_SPI_IRQHandler(mx_spi2_gethandle());
 }
+
+#if TEST_ADC_QUALITY
+
+/**
+  * brief:  Arm (or re-arm) an interrupt-driven reception of a single command line
+  *         from the PC on UART5. Content is ignored; see uart5_cmd_wait_for_command().
+  * retval: none
+  */
+static void uart5_cmd_arm_receive(hal_uart_handle_t *huart5)
+{
+  (void)HAL_UART_ReceiveToIdle_IT(huart5, uart5_cmd_rx_buf, UART5_CMD_RX_BUF_SIZE);
+}
+
+/**
+  * brief:  Block until the PC sends anything on UART5 (the "go ahead" for the next
+  *         acquisition step), then consume it. Reception itself stays fully
+  *         interrupt-driven (see HAL_UART_RxCpltCallback() / UART5_IRQHandler()); this
+  *         function only busy-waits on the resulting flag, which is fine here since
+  *         the ADC quality test has nothing else to do while waiting for the operator.
+  * retval: none
+  */
+static void uart5_cmd_wait_for_command(void)
+{
+  while (uart5_cmd_ready == 0U)
+  {
+  }
+  uart5_cmd_ready = 0U;
+}
+
+/**
+  * brief:  TEST_1: for each channel in adc_quality_channels[] and each nominal
+  *         voltage in adc_quality_voltages_v[], wait for the operator to set up the
+  *         reference on that channel and confirm from the PC script (any data
+  *         received on UART5), then acquire ADC_QUALITY_SAMPLES_PER_POINT samples of
+  *         that single channel and stream them out as CSV lines.
+  *         Wire protocol (see also the project README):
+  *           READY,ADC<n>,<pin>,<v>V              -- sent, then this firmware blocks
+  *           (operator sets up the reference and sends anything from the PC script)
+  *           START,ADC<n>,<pin>,<v>V,<count>
+  *           <index>,<raw>,<adc_mV>,<vin_mV>       -- repeated <count> times
+  *           END,ADC<n>,<pin>,<v>V
+  *         ... repeated for every (channel, voltage) combination, then:
+  *           ALL_DONE
+  * retval: none
+  */
+static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2)
+{
+  char     line[64];
+  int      len;
+  uint32_t ch;
+  uint32_t v;
+
+  for (ch = 0U; ch < ADC_QUALITY_CHANNEL_COUNT; ch++)
+  {
+    const adc_quality_channel_t *p_ch = &adc_quality_channels[ch];
+    hal_adc_handle_t *hadc = (p_ch->adc_number == 1U) ? hadc1 : hadc2;
+    uint8_t nb_channels_in_seq = (p_ch->adc_number == 1U) ? ADC1_NB_CHANNELS : ADC2_NB_CHANNELS;
+    const char *adc_label = (p_ch->adc_number == 1U) ? "ADC1" : "ADC2";
+
+    for (v = 0U; v < ADC_QUALITY_VOLTAGE_COUNT; v++)
+    {
+      uint32_t voltage_v = adc_quality_voltages_v[v];
+      uint32_t sample;
+
+      len = snprintf(line, sizeof(line), "READY,ADC%u,%s,%luV\r\n",
+                      (unsigned int)p_ch->adc_number, p_ch->pin_label, (unsigned long)voltage_v);
+      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+      /* Operator sets up the reference voltage on this channel, then confirms
+         from the PC script; content is irrelevant, only its arrival matters. */
+      uart5_cmd_wait_for_command();
+
+      len = snprintf(line, sizeof(line), "START,ADC%u,%s,%luV,%lu\r\n",
+                      (unsigned int)p_ch->adc_number, p_ch->pin_label, (unsigned long)voltage_v,
+                      (unsigned long)ADC_QUALITY_SAMPLES_PER_POINT);
+      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+      for (sample = 0U; sample < ADC_QUALITY_SAMPLES_PER_POINT; sample++)
+      {
+        /* Re-uses the same discontinuous-mode trigger/poll sequence already
+           validated for the normal demo loop; only the target channel's rank
+           result (channel_idx) is actually reported. */
+        if (adc_read_group(huart5, adc_label, hadc, nb_channels_in_seq, adc_results) == 0U)
+        {
+          adc_test_error(huart5, "ADC quality test: conversion failed");
+        }
+
+        len = snprintf(line, sizeof(line), "%lu,%ld,%ld,%ld\r\n",
+                        (unsigned long)sample,
+                        (long)adc_results[p_ch->channel_idx].raw,
+                        (long)adc_results[p_ch->channel_idx].adc_mv,
+                        (long)adc_results[p_ch->channel_idx].input_mv);
+        (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      }
+
+      len = snprintf(line, sizeof(line), "END,ADC%u,%s,%luV\r\n",
+                      (unsigned int)p_ch->adc_number, p_ch->pin_label, (unsigned long)voltage_v);
+      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+    }
+  }
+
+  (void)HAL_UART_Transmit(huart5, "ALL_DONE\r\n", 10U, UART_TX_TIMEOUT_MS);
+}
+
+#endif /* TEST_ADC_QUALITY */

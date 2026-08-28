@@ -7,3 +7,7 @@ build/
 # OS / editor cruft
 Thumbs.db
 .DS_Store
+
+# ADC quality test captured data (per-run, not source)
+adc_quality_test/data/
+__pycache__/

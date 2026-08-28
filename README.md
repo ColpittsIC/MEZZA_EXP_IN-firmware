@@ -9,6 +9,8 @@ Il firmware esegue quattro test hardware in loop, riportando i risultati via UAR
 3. **Test USART3**: invio periodico di un messaggio verso l'altro microcontrollore e ricezione della sua risposta, interamente a interrupt.
 4. **Test SPI2**: scambio periodico di un byte full-duplex con l'altro microcontrollore (questa scheda è SPI Master), interamente a interrupt.
 
+Esiste inoltre una **modalità di build separata**, selezionata dal flag `TEST_ADC_QUALITY` in cima a `main.c` (0 = firmware normale sopra, 1 = procedura di qualifica ADC pilotata da uno script Python, che sostituisce interamente il loop normale). Vedi [`adc_quality_test/README.md`](adc_quality_test/README.md).
+
 ## Hardware
 
 ### Ingressi ADC (10 canali)
@@ -37,6 +39,7 @@ Tutti i risultati dei test vengono stampati come testo su **UART5**:
 - TX: PB6
 - RX: PB5
 - Baud rate: 115200, 8N1, nessun controllo di flusso
+- RX è usata solo in modalità `TEST_ADC_QUALITY` (vedi sotto), per ricevere i comandi "vai" dallo script Python; nel firmware normale la UART5 è usata solo in trasmissione.
 
 ### LED - Charlieplexing (10 LED, 4 pin di pilotaggio)
 
