@@ -49,6 +49,39 @@ Per ciascuna combinazione (ADC, canale, tensione nominale — attualmente
 Tutti i messaggi non riconosciuti (es. il boot del firmware) vengono comunque
 stampati a schermo, quindi non perdi visibilità su cosa fa la scheda.
 
+## 4. Analisi dei dati
+
+```
+python analyze_adc_data.py               # apre un selettore di cartella
+python analyze_adc_data.py data          # oppure specifica la cartella direttamente
+python analyze_adc_data.py data --plot   # + grafici PNG
+python analyze_adc_data.py data --plot --show   # + li mostra anche a schermo
+```
+
+Legge tutti i file `ADC<n>_<pin>_<v>V.csv` nella cartella scelta e calcola:
+
+- **Per ogni punto** (un file): media, deviazione standard, min/max/picco-picco
+  di raw/adc_mV/vin_mV; una stima grezza della risoluzione effettiva dal
+  picco-picco dei codici; un controllo di deriva (media prima metà vs seconda
+  metà della serie, per scoprire eventuali derive termiche durante
+  l'acquisizione).
+- **Per ogni canale** (tutti i suoi punti insieme): fit lineare tensione
+  misurata vs tensione nominale -> **errore di guadagno**, **offset**, R²,
+  e il residuo (non linearità) ad ogni punto.
+- Un elenco di **anomalie** rispetto a soglie di default (guadagno >1%,
+  offset >20mV, deriva >5mV) - solo per farti notare in fretta cosa guardare
+  prima nelle tabelle.
+
+Risultati: due CSV di riepilogo in `<cartella>/analysis/` (`summary_per_point.csv`,
+`summary_per_channel.csv`), stampati anche a schermo. Con `--plot`: un grafico
+guadagno/offset + residui per ciascun canale, più un confronto a barre tra
+tutti i canali, sempre in `<cartella>/analysis/`.
+
+> Nota sulla "risoluzione effettiva stimata": è un indicatore informale basato
+> sulla dispersione dei codici a tensione costante (DC), non l'ENOB standard
+> da spettro/FFT (che richiede un ingresso sinusoidale) - utile solo per
+> confrontare il rumore tra i canali, non come specifica di laboratorio.
+
 ## Protocollo seriale (per riferimento)
 
 ```

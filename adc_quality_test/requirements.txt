@@ -1,1 +1,6 @@
 pyserial>=3.5
+
+# For analyze_adc_data.py:
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.7   # optional: only needed for --plot
