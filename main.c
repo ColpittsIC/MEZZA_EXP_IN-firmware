@@ -28,7 +28,7 @@
    1 = run the ADC quality-test procedure selected by ADC_QUALITY_TEST_ID
        instead: the other tests (LED, USART3, SPI2) are not started, and
        main() never returns to the normal loop. */
-#define TEST_ADC_QUALITY         0U
+#define TEST_ADC_QUALITY         1U
 
 /* Which ADC quality-test procedure to run when TEST_ADC_QUALITY == 1.
    Only TEST_1 exists today; the value/dispatch is kept so more can be added
@@ -79,6 +79,15 @@ typedef struct
 #define ADC1_NB_CHANNELS         8U
 #define ADC2_NB_CHANNELS         2U
 #define ADC_TOTAL_CHANNELS       (ADC1_NB_CHANNELS + ADC2_NB_CHANNELS)
+
+/* Informational only (sent to the PC in the ADC quality test's CONFIG block -
+   see adc_quality_send_config()); keep these in sync by hand with the actual
+   configuration in mx_rcc.c (PSIS 144 MHz / ADC_DAC prescaler 4) and
+   mx_adc1.c / mx_adc2.c (HAL_ADC_SAMPLING_TIME_48CYCLES). */
+#define ADC_RESOLUTION_BITS         12U
+#define ADC_KERNEL_CLOCK_HZ         36000000UL  /* 144 MHz PSIS / 4 */
+#define ADC_SAMPLING_TIME_CYCLES    48U
+#define ADC_CONV_CYCLES_X10         125U        /* 12.5 SAR conversion cycles, x10 to avoid float */
 
 #define ADC_CONV_TIMEOUT_MS      100U
 #define UART_TX_TIMEOUT_MS       100U
@@ -223,6 +232,7 @@ static void spi2_report(hal_uart_handle_t *huart);
 #if TEST_ADC_QUALITY
 static void uart5_cmd_arm_receive(hal_uart_handle_t *huart5);
 static void uart5_cmd_wait_for_command(void);
+static void adc_quality_send_config(hal_uart_handle_t *huart5);
 static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2);
 #endif /* TEST_ADC_QUALITY */
 
@@ -287,6 +297,10 @@ int main(void)
        from the PC script (any received data is treated as "go ahead"). */
     uart5_cmd_arm_receive(huart5);
     uart_send_string(huart5, ">>> TEST_ADC_QUALITY mode - running TEST_1 <<<\r\n");
+
+    /* Sent once, before the first READY: lets the PC script save a record of
+       the exact ADC settings in effect for this run, before any data file. */
+    adc_quality_send_config(huart5);
 
 #if (ADC_QUALITY_TEST_ID == 1U)
     adc_quality_run_test_1(huart5, hadc1, hadc2);
@@ -837,6 +851,83 @@ static void uart5_cmd_wait_for_command(void)
   {
   }
   uart5_cmd_ready = 0U;
+}
+
+/**
+  * brief:  Send a CONFIG_BEGIN/CONFIG_END block of "key=value" lines describing
+  *         the exact ADC settings in effect for this run (resolution, VREF,
+  *         clock, sampling time, attenuation factor, channel/voltage lists,
+  *         ...), so the PC script can save them alongside the acquired data
+  *         for later quality evaluation. Sent once, before the first READY.
+  * retval: none
+  */
+static void adc_quality_send_config(hal_uart_handle_t *huart5)
+{
+  char     line[160];
+  int      len;
+  uint32_t i;
+
+  uart_send_string(huart5, "CONFIG_BEGIN\r\n");
+
+  len = snprintf(line, sizeof(line), "firmware_build=%s %s\r\n", __DATE__, __TIME__);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  len = snprintf(line, sizeof(line), "test_id=%u\r\n", (unsigned int)ADC_QUALITY_TEST_ID);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  len = snprintf(line, sizeof(line), "adc_vref_mV=%u\r\n", (unsigned int)ADC_VREF_MV);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  len = snprintf(line, sizeof(line), "adc_resolution_bits=%u\r\n", (unsigned int)ADC_RESOLUTION_BITS);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  len = snprintf(line, sizeof(line), "adc_kernel_clock_Hz=%lu\r\n", (unsigned long)ADC_KERNEL_CLOCK_HZ);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  len = snprintf(line, sizeof(line), "adc_sampling_time_cycles=%u\r\n", (unsigned int)ADC_SAMPLING_TIME_CYCLES);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  /* Sent as a x10 integer (no float printf support with nano.specs); the PC
+     side divides by 10 to get the usual "12.5 cycles" figure. */
+  len = snprintf(line, sizeof(line), "adc_conv_cycles_x10=%u\r\n", (unsigned int)ADC_CONV_CYCLES_X10);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  /* atten_factor = atten_factor_num / atten_factor_den (e.g. 10000/2875 = 0.2875) */
+  len = snprintf(line, sizeof(line), "atten_factor_num=%lu\r\n", (unsigned long)ATTEN_FACTOR_NUM);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  len = snprintf(line, sizeof(line), "atten_factor_den=%lu\r\n", (unsigned long)ATTEN_FACTOR_DEN);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  len = snprintf(line, sizeof(line), "samples_per_point=%lu\r\n", (unsigned long)ADC_QUALITY_SAMPLES_PER_POINT);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  len = snprintf(line, sizeof(line), "uart_baud=115200\r\n");
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  /* voltages_v=0,2,4,6,8,10 */
+  len = snprintf(line, sizeof(line), "voltages_v=");
+  for (i = 0U; i < ADC_QUALITY_VOLTAGE_COUNT; i++)
+  {
+    len += snprintf(&line[len], sizeof(line) - (size_t)len, "%s%lu",
+                     (i == 0U) ? "" : ",", (unsigned long)adc_quality_voltages_v[i]);
+  }
+  len += snprintf(&line[len], sizeof(line) - (size_t)len, "\r\n");
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  /* channels=ADC1:PA0,ADC1:PA1,...,ADC2:PB1 */
+  len = snprintf(line, sizeof(line), "channels=");
+  for (i = 0U; i < ADC_QUALITY_CHANNEL_COUNT; i++)
+  {
+    len += snprintf(&line[len], sizeof(line) - (size_t)len, "%sADC%u:%s",
+                     (i == 0U) ? "" : ",",
+                     (unsigned int)adc_quality_channels[i].adc_number,
+                     adc_quality_channels[i].pin_label);
+  }
+  len += snprintf(&line[len], sizeof(line) - (size_t)len, "\r\n");
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  uart_send_string(huart5, "CONFIG_END\r\n");
 }
 
 /**

@@ -4,7 +4,11 @@ ADC quality test - PC-side controller / logger.
 
 Talks to the MEZZA_EXP_IN board over UART5 (the same debug link used for the
 normal demo firmware) while it is built and flashed with TEST_ADC_QUALITY = 1
-(see main.c). For each (ADC, channel, nominal voltage) combination the board:
+(see main.c). Before the first channel, the board sends one "CONFIG_BEGIN" /
+"CONFIG_END" block of "key=value" lines describing the exact ADC settings for
+this run (resolution, VREF, clock, sampling time, attenuation factor, channel
+and voltage lists, ...). Then, for each (ADC, channel, nominal voltage)
+combination:
 
   1. Sends "READY,ADC<n>,<pin>,<v>V" and then blocks, waiting for anything to
      arrive on UART5.
@@ -15,6 +19,8 @@ normal demo firmware) while it is built and flashed with TEST_ADC_QUALITY = 1
 This script:
   - Prints every line it does not specifically recognize (e.g. the firmware's
     boot messages), so nothing is silently swallowed.
+  - Saves the CONFIG block to "adc_config.json" in the --outdir folder, before
+    any data file is written.
   - On each READY, prompts the operator to set up the reference voltage on the
     given channel, waits for Enter, then tells the board to go ahead.
   - Saves each completed series to its own CSV file, named
@@ -24,8 +30,10 @@ This script:
 
 import argparse
 import csv
+import json
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import serial
@@ -47,6 +55,39 @@ def read_line(ser: serial.Serial) -> str:
     """Block until one full line arrives on the serial port, return it stripped."""
     raw = ser.readline()
     return raw.decode("ascii", errors="replace").strip()
+
+
+def handle_config(ser: serial.Serial, outdir: Path, port: str, baud: int) -> dict:
+    """Read "key=value" lines until "CONFIG_END", save them (plus a few
+    host-side fields for traceability) to "<outdir>/adc_config.json", and
+    return the merged dict. Called once, before the first READY."""
+    config: dict[str, str] = {}
+    while True:
+        line = read_line(ser)
+        if not line:
+            continue
+        if line == "CONFIG_END":
+            break
+        key, sep, value = line.partition("=")
+        if sep:
+            config[key] = value
+        else:
+            print(f"  (riga CONFIG ignorata: {line!r})")
+
+    config["_host_acquisition_datetime"] = datetime.now(timezone.utc).isoformat()
+    config["_host_serial_port"] = port
+    config["_host_baud"] = baud
+
+    outdir.mkdir(parents=True, exist_ok=True)
+    config_path = outdir / "adc_config.json"
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=2)
+
+    print(f"\n=== Configurazione ADC per questa sessione (salvata in {config_path.name}) ===")
+    for key, value in config.items():
+        print(f"  {key} = {value}")
+
+    return config
 
 
 def handle_ready(ser: serial.Serial, fields: list[str]) -> None:
@@ -111,6 +152,10 @@ def main() -> int:
         while True:
             line = read_line(ser)
             if not line:
+                continue
+
+            if line == "CONFIG_BEGIN":
+                handle_config(ser, args.outdir, args.port, args.baud)
                 continue
 
             fields = line.split(",")

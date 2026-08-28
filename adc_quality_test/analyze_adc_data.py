@@ -34,6 +34,7 @@ text prompt if no display / tkinter is unavailable).
 """
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -72,6 +73,24 @@ def select_folder(cli_arg: Optional[str]) -> Path:
     default_dir = Path(__file__).resolve().parent / "data"
     typed = input(f"Cartella dati da analizzare (Enter per default: {default_dir}): ").strip()
     return Path(typed) if typed else default_dir
+
+
+def print_config(folder: Path) -> None:
+    """If adc_quality_test.py saved an adc_config.json in this folder (the ADC
+    settings in effect when the data was acquired), print it so it travels
+    together with the analysis results."""
+    config_path = folder / "adc_config.json"
+    if not config_path.is_file():
+        print("(nessun adc_config.json trovato in questa cartella - dati acquisiti con una versione "
+              "precedente dello script, o cartella sbagliata)")
+        return
+
+    with open(config_path) as f:
+        config = json.load(f)
+
+    print(f"=== Configurazione ADC al momento dell'acquisizione ({config_path.name}) ===")
+    for key, value in config.items():
+        print(f"  {key} = {value}")
 
 
 def discover_series(folder: Path) -> list[dict]:
@@ -258,7 +277,10 @@ def main() -> int:
         print(f"Cartella non trovata: {folder}")
         return 1
 
-    print(f"Analisi della cartella: {folder}")
+    print(f"Analisi della cartella: {folder}\n")
+    print_config(folder)
+    print()
+
     entries = discover_series(folder)
     if not entries:
         print("Nessun file ADC<n>_<pin>_<v>V.csv trovato in questa cartella.")

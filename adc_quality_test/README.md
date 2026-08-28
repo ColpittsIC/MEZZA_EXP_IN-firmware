@@ -36,7 +36,13 @@ pip install -r requirements.txt
 python adc_quality_test.py COM5        # sostituisci con la tua porta seriale
 ```
 
-Per ciascuna combinazione (ADC, canale, tensione nominale — attualmente
+Prima di tutto, la scheda manda un blocco con le impostazioni ADC di questa
+sessione (VREF, risoluzione, clock, sampling time, fattore di attenuazione,
+elenco canali/tensioni, ...): lo script lo salva subito in
+`data/adc_config.json`, **prima** di qualunque file di dati, così resta un
+riferimento di cosa era configurato quando i dati sono stati acquisiti.
+
+Poi, per ciascuna combinazione (ADC, canale, tensione nominale — attualmente
 0/2/4/6/8/10 V, definite in `adc_quality_voltages_v[]` in `main.c`) lo script:
 
 1. Ti chiede di impostare quella tensione sul canale indicato e di premere Enter.
@@ -58,7 +64,9 @@ python analyze_adc_data.py data --plot   # + grafici PNG
 python analyze_adc_data.py data --plot --show   # + li mostra anche a schermo
 ```
 
-Legge tutti i file `ADC<n>_<pin>_<v>V.csv` nella cartella scelta e calcola:
+Se presente, stampa a inizio report anche il contenuto di `adc_config.json`
+della cartella (le impostazioni ADC valide per quei dati). Poi legge tutti i
+file `ADC<n>_<pin>_<v>V.csv` nella cartella scelta e calcola:
 
 - **Per ogni punto** (un file): media, deviazione standard, min/max/picco-picco
   di raw/adc_mV/vin_mV; una stima grezza della risoluzione effettiva dal
@@ -85,14 +93,26 @@ tutti i canali, sempre in `<cartella>/analysis/`.
 ## Protocollo seriale (per riferimento)
 
 ```
-READY,ADC<n>,<pin>,<v>V              -> la scheda si blocca qui
+CONFIG_BEGIN                          -> una volta sola, a inizio sessione
+key=value                              (una riga per parametro, vedi sotto)
+...
+CONFIG_END
+READY,ADC<n>,<pin>,<v>V               -> la scheda si blocca qui
 (operatore prepara il riferimento, poi lo script manda un qualsiasi dato)
 START,ADC<n>,<pin>,<v>V,<count>
-<index>,<raw>,<adc_mV>,<vin_mV>      -> ripetuta <count> volte
+<index>,<raw>,<adc_mV>,<vin_mV>       -> ripetuta <count> volte
 END,ADC<n>,<pin>,<v>V
 ... (si ripete per ogni combinazione) ...
 ALL_DONE
 ```
+
+Parametri inclusi nel blocco CONFIG: `firmware_build`, `test_id`, `adc_vref_mV`,
+`adc_resolution_bits`, `adc_kernel_clock_Hz`, `adc_sampling_time_cycles`,
+`adc_conv_cycles_x10` (x10 per evitare i float, es. 125 = 12,5 cicli),
+`atten_factor_num`/`atten_factor_den` (fattore = num/den, es. 10000/2875 =
+0,2875), `samples_per_point`, `uart_baud`, `voltages_v` (lista), `channels`
+(lista `ADC<n>:<pin>`). Lo script aggiunge anche `_host_acquisition_datetime`,
+`_host_serial_port`, `_host_baud` lato PC.
 
 Il contenuto del comando mandato dallo script per "sbloccare" la scheda non
 viene interpretato dal firmware: basta che arrivi *qualcosa*.
