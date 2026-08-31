@@ -29,6 +29,16 @@ concentrato sulla UART5 e sul test ADC.
 - Uscita dell'alimentatore collegata al pin ADC indicato dal messaggio
   `READY` corrente (uno alla volta).
 
+> **Baud rate: 921600** (non più 115200), definito una sola volta in
+> `MX_UART5_BAUD_RATE` (`generated/hal/mx_uart5.h`) — lo script Python lo usa
+> già come default. Il collo di bottiglia della procedura è la trasmissione
+> UART dei 10000 campioni per punto, non l'ADC (che è ordini di grandezza più
+> veloce - vedi `adc_max_sample_rate_sps` nel blocco CONFIG più sotto), quindi
+> alzare il baud rate accelera il test quasi proporzionalmente. Se il tuo
+> adattatore USB-seriale supporta velocità ancora maggiori, quel `#define` è
+> l'unico punto da cambiare (ricordati di aggiornare anche `DEFAULT_BAUD` in
+> `adc_quality_test.py`).
+
 ## 3. Esecuzione
 
 ```
@@ -124,10 +134,23 @@ ALL_DONE
 Parametri inclusi nel blocco CONFIG: `firmware_build`, `test_id`, `adc_vref_mV`,
 `adc_resolution_bits`, `adc_kernel_clock_Hz`, `adc_sampling_time_cycles`,
 `adc_conv_cycles_x10` (x10 per evitare i float, es. 125 = 12,5 cicli),
+`adc_conv_time_ns` (durata di UNA conversione a singolo canale: sampling +
+conversione SAR, ai clock dell'ADC), `adc_max_sample_rate_sps` (il suo
+reciproco: velocità massima teorica dell'ADC per un singolo canale, in
+campioni/secondo), `test_effective_sample_rate_adc1_sps` /
+`test_effective_sample_rate_adc2_sps` (velocità *effettiva* per un canale
+durante questo test specifico: essendo letto tramite la scansione round-robin
+dell'intera sequenza — 8 rank su ADC1, 2 su ADC2 — la velocità realmente
+ottenuta per quel canale è quella massima divisa per 8 o per 2),
 `atten_factor_num`/`atten_factor_den` (fattore = num/den, es. 10000/2875 =
 0,2875), `samples_per_point`, `uart_baud`, `voltages_v` (lista), `channels`
 (lista `ADC<n>:<pin>`). Lo script aggiunge anche `_host_acquisition_datetime`,
 `_host_serial_port`, `_host_baud` lato PC.
+
+> Anche alla velocità *effettiva* (decine/centinaia di migliaia di
+> campioni/secondo), l'ADC resta ordini di grandezza più veloce della UART:
+> il tempo di una serie da 10000 campioni è dominato quasi interamente dalla
+> trasmissione seriale, non dall'acquisizione.
 
 Il contenuto del comando mandato dallo script per "sbloccare" la scheda dopo
 una `READY` non viene interpretato dal firmware: basta che arrivi *qualcosa*.

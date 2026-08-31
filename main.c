@@ -88,6 +88,10 @@ typedef struct
 #define ADC_KERNEL_CLOCK_HZ         36000000UL  /* 144 MHz PSIS / 4 */
 #define ADC_SAMPLING_TIME_CYCLES    48U
 #define ADC_CONV_CYCLES_X10         125U        /* 12.5 SAR conversion cycles, x10 to avoid float */
+/* Total time for one single-channel conversion, in ADC clock cycles x10
+   (sampling + SAR conversion), used to derive the conversion time / max
+   sample rate reported in the CONFIG block. */
+#define ADC_TOTAL_CYCLES_X10        ((ADC_SAMPLING_TIME_CYCLES * 10UL) + ADC_CONV_CYCLES_X10)
 
 #define ADC_CONV_TIMEOUT_MS      100U
 #define UART_TX_TIMEOUT_MS       100U
@@ -994,6 +998,38 @@ static void adc_quality_send_config(hal_uart_handle_t *huart5)
   len = snprintf(line, sizeof(line), "adc_conv_cycles_x10=%u\r\n", (unsigned int)ADC_CONV_CYCLES_X10);
   (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
+  /* How long one single-channel conversion actually takes, and the resulting
+     max sample rate - both derived from the two lines above (sampling time +
+     SAR conversion cycles, at the ADC kernel clock). This is the raw ADC
+     hardware capability; within THIS test, a channel is read via
+     adc_read_group()'s round-robin over its whole ADC1 (8-rank) or ADC2
+     (2-rank) sequence for every kept sample (see adc_quality_run_test_1()),
+     so the *effective* per-channel rate during acquisition is this value
+     divided by 8 (ADC1) or 2 (ADC2) - reported below as well, since the
+     transmission time over UART dominates by ~2 orders of magnitude anyway
+     (see MX_UART5_BAUD_RATE in mx_uart5.h). All integer math, rounded to the
+     nearest unit, to avoid needing float printf support with nano.specs. */
+  {
+    uint64_t conv_time_ns_num = (uint64_t)ADC_TOTAL_CYCLES_X10 * 1000000000ULL;
+    uint64_t conv_time_ns_den = 10ULL * (uint64_t)ADC_KERNEL_CLOCK_HZ;
+    uint32_t conv_time_ns = (uint32_t)((conv_time_ns_num + (conv_time_ns_den / 2ULL)) / conv_time_ns_den);
+    uint32_t max_rate_sps = (uint32_t)((10ULL * (uint64_t)ADC_KERNEL_CLOCK_HZ) / (uint64_t)ADC_TOTAL_CYCLES_X10);
+
+    len = snprintf(line, sizeof(line), "adc_conv_time_ns=%lu\r\n", (unsigned long)conv_time_ns);
+    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+    len = snprintf(line, sizeof(line), "adc_max_sample_rate_sps=%lu\r\n", (unsigned long)max_rate_sps);
+    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+    len = snprintf(line, sizeof(line), "test_effective_sample_rate_adc1_sps=%lu\r\n",
+                    (unsigned long)(max_rate_sps / ADC1_NB_CHANNELS));
+    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+    len = snprintf(line, sizeof(line), "test_effective_sample_rate_adc2_sps=%lu\r\n",
+                    (unsigned long)(max_rate_sps / ADC2_NB_CHANNELS));
+    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  }
+
   /* atten_factor = atten_factor_num / atten_factor_den (e.g. 10000/2875 = 0.2875) */
   len = snprintf(line, sizeof(line), "atten_factor_num=%lu\r\n", (unsigned long)ATTEN_FACTOR_NUM);
   (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
@@ -1004,7 +1040,7 @@ static void adc_quality_send_config(hal_uart_handle_t *huart5)
   len = snprintf(line, sizeof(line), "samples_per_point=%lu\r\n", (unsigned long)ADC_QUALITY_SAMPLES_PER_POINT);
   (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
-  len = snprintf(line, sizeof(line), "uart_baud=115200\r\n");
+  len = snprintf(line, sizeof(line), "uart_baud=%lu\r\n", (unsigned long)MX_UART5_BAUD_RATE);
   (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   /* voltages_v=0,2,4,6,8,10 */

@@ -45,7 +45,7 @@ from pathlib import Path
 
 import serial
 
-DEFAULT_BAUD = 115200
+DEFAULT_BAUD = 921600  # must match MX_UART5_BAUD_RATE in generated/hal/mx_uart5.h
 DEFAULT_OUTDIR = Path(__file__).resolve().parent / "data"
 
 

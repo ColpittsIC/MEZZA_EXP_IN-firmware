@@ -29,6 +29,17 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
+/* Single source of truth for UART5's baud rate: used both by mx_uart5.c (to
+   configure the peripheral) and by main.c (to report it in the ADC quality
+   test CONFIG block, and to know what to tell the operator to set their
+   terminal / the PC scripts' --baud to).
+   921600 was picked as a large, near-universally supported speed-up over the
+   classic 115200 (the ADC quality test's 10000-sample-per-point CSV streaming
+   is UART-transmission-bound, not ADC-conversion-bound - see
+   adc_quality_send_config() in main.c). If your USB-serial adapter supports
+   an even higher standard rate, this is the only place to change. */
+#define MX_UART5_BAUD_RATE   921600UL
+
 /* Exported macros -----------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */

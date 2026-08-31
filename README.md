@@ -38,8 +38,8 @@ Tutti i risultati dei test vengono stampati come testo su **UART5**:
 
 - TX: PB6
 - RX: PB5
-- Baud rate: 115200, 8N1, nessun controllo di flusso
-- RX è usata solo in modalità `TEST_ADC_QUALITY` (vedi sotto), per ricevere i comandi "vai" dallo script Python; nel firmware normale la UART5 è usata solo in trasmissione.
+- Baud rate: **921600**, 8N1, nessun controllo di flusso (`MX_UART5_BAUD_RATE` in `generated/hal/mx_uart5.h` — unico punto da cambiare se serve un'altra velocità; ricordati di aggiornare anche il terminale che usi per leggerla)
+- RX è usata solo in modalità `TEST_ADC_QUALITY` (vedi sotto), per ricevere i comandi dallo script Python; nel firmware normale la UART5 è usata solo in trasmissione.
 
 ### LED - Charlieplexing (10 LED, 4 pin di pilotaggio)
 
@@ -152,5 +152,5 @@ arm-none-eabi-objcopy -O binary build/debug_GCC_STM32C552CEU6/MEZZA_EXP_IN.elf b
 
 1. Programmare `MEZZA_EXP_IN.elf` (o `.hex`) sulla scheda tramite ST-Link (es. STM32CubeProgrammer o da STM32CubeIDE).
 2. Collegare un adattatore USB-seriale a UART5 (TX scheda = PB6 -> RX adattatore, RX scheda = PB5 <- TX adattatore, GND comune).
-3. Aprire un terminale seriale a 115200 8N1.
+3. Aprire un terminale seriale a 921600 8N1.
 4. Al reset, verificare il messaggio di boot, poi i risultati periodici di ADC e LED.

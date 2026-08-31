@@ -51,7 +51,7 @@ hal_uart_handle_t *mx_uart5_uart_init(void)
     return NULL;
   }
 
-  uart_config.baud_rate = 115200;
+  uart_config.baud_rate = MX_UART5_BAUD_RATE;
   uart_config.clock_prescaler = HAL_UART_PRESCALER_DIV1;
   uart_config.word_length = HAL_UART_WORD_LENGTH_8_BIT;
   uart_config.stop_bits = HAL_UART_STOP_BIT_1;
