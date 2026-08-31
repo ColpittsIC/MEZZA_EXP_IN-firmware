@@ -33,17 +33,29 @@ concentrato sulla UART5 e sul test ADC.
 
 ```
 pip install -r requirements.txt
-python adc_quality_test.py COM5        # sostituisci con la tua porta seriale
+
+python adc_quality_test.py COM5              # test completo: tutti i 10 canali
+python adc_quality_test.py COM5 --ADC1 --CH3 # solo ADC1, canale 3 (PA3)
+python adc_quality_test.py COM5 --ADC2 --CH1 # solo ADC2, canale 1 (PB1)
 ```
+
+Sostituisci `COM5` con la tua porta seriale. `--ADC1`/`--ADC2` e `--CH0`..`--CH7`
+vanno usati insieme (o nessuno dei due, per il test completo); `--ADC2` accetta
+solo `--CH0` o `--CH1` (ADC2 ha solo quei due canali collegati). Quando selezioni
+un solo canale, la scheda salta all'istante tutti gli altri (nessuna attesa,
+nessuna trasmissione) — non paghi il tempo delle combinazioni non richieste.
 
 Prima di tutto, la scheda manda un blocco con le impostazioni ADC di questa
 sessione (VREF, risoluzione, clock, sampling time, fattore di attenuazione,
 elenco canali/tensioni, ...): lo script lo salva subito in
 `data/adc_config.json`, **prima** di qualunque file di dati, così resta un
-riferimento di cosa era configurato quando i dati sono stati acquisiti.
+riferimento di cosa era configurato quando i dati sono stati acquisiti. Subito
+dopo, la scheda chiede quale selezione fare e lo script risponde in automatico
+in base a `--ADC1/--ADC2/--CH...` (o "tutto", se non li hai passati).
 
-Poi, per ciascuna combinazione (ADC, canale, tensione nominale — attualmente
-0/2/4/6/8/10 V, definite in `adc_quality_voltages_v[]` in `main.c`) lo script:
+Poi, per ciascuna combinazione selezionata (ADC, canale, tensione nominale —
+attualmente 0/2/4/6/8/10 V, definite in `adc_quality_voltages_v[]` in `main.c`)
+lo script:
 
 1. Ti chiede di impostare quella tensione sul canale indicato e di premere Enter.
 2. Manda "vai" alla scheda, che acquisisce 10000 campioni di quel solo canale
@@ -97,12 +109,15 @@ CONFIG_BEGIN                          -> una volta sola, a inizio sessione
 key=value                              (una riga per parametro, vedi sotto)
 ...
 CONFIG_END
+SELECT_PROMPT                         -> la scheda si blocca qui
+(lo script manda "ALL" oppure "ADC<n>,CH<c>")
+[SELECT_INVALID - solo se la risposta non era valida: si procede con "ALL"]
 READY,ADC<n>,<pin>,<v>V               -> la scheda si blocca qui
 (operatore prepara il riferimento, poi lo script manda un qualsiasi dato)
 START,ADC<n>,<pin>,<v>V,<count>
 <index>,<raw>,<adc_mV>,<vin_mV>       -> ripetuta <count> volte
 END,ADC<n>,<pin>,<v>V
-... (si ripete per ogni combinazione) ...
+... (si ripete per ogni combinazione selezionata) ...
 ALL_DONE
 ```
 
@@ -114,5 +129,7 @@ Parametri inclusi nel blocco CONFIG: `firmware_build`, `test_id`, `adc_vref_mV`,
 (lista `ADC<n>:<pin>`). Lo script aggiunge anche `_host_acquisition_datetime`,
 `_host_serial_port`, `_host_baud` lato PC.
 
-Il contenuto del comando mandato dallo script per "sbloccare" la scheda non
-viene interpretato dal firmware: basta che arrivi *qualcosa*.
+Il contenuto del comando mandato dallo script per "sbloccare" la scheda dopo
+una `READY` non viene interpretato dal firmware: basta che arrivi *qualcosa*.
+La risposta a `SELECT_PROMPT` invece viene interpretata (deve essere `ALL` o
+`ADC<1|2>,CH<n>` esatto).

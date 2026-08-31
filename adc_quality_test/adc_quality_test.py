@@ -7,14 +7,21 @@ normal demo firmware) while it is built and flashed with TEST_ADC_QUALITY = 1
 (see main.c). Before the first channel, the board sends one "CONFIG_BEGIN" /
 "CONFIG_END" block of "key=value" lines describing the exact ADC settings for
 this run (resolution, VREF, clock, sampling time, attenuation factor, channel
-and voltage lists, ...). Then, for each (ADC, channel, nominal voltage)
-combination:
+and voltage lists, ...), then "SELECT_PROMPT" and blocks: this script replies
+with "ALL" (default, no channel selected on the command line) or
+"ADC<n>,CH<c>" (single-channel run, see --ADC1/--ADC2 and --CH0..--CH7 below).
+Then, for each selected (ADC, channel, nominal voltage) combination:
 
   1. Sends "READY,ADC<n>,<pin>,<v>V" and then blocks, waiting for anything to
      arrive on UART5.
   2. Once this script sends "GO", the board replies "START,ADC<n>,<pin>,<v>V,<count>"
      followed by <count> CSV lines "<index>,<raw>,<adc_mV>,<vin_mV>", then "END,...".
   3. This repeats for every combination; the board finally sends "ALL_DONE".
+
+Usage:
+    python adc_quality_test.py COM5                    # test all 10 channels
+    python adc_quality_test.py COM5 --ADC1 --CH3        # test only ADC1 channel 3 (PA3)
+    python adc_quality_test.py COM5 --ADC2 --CH1        # test only ADC2 channel 1 (PB1)
 
 This script:
   - Prints every line it does not specifically recognize (e.g. the firmware's
@@ -48,7 +55,33 @@ def parse_args():
     parser.add_argument("--baud", type=int, default=DEFAULT_BAUD, help=f"Baud rate (default: {DEFAULT_BAUD})")
     parser.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR,
                          help=f"Folder where the CSV files are saved (default: {DEFAULT_OUTDIR})")
-    return parser.parse_args()
+
+    adc_group = parser.add_mutually_exclusive_group()
+    adc_group.add_argument("--ADC1", action="store_true", help="Test only ADC1 (requires one of --CH0..--CH7)")
+    adc_group.add_argument("--ADC2", action="store_true", help="Test only ADC2 (requires --CH0 or --CH1)")
+
+    ch_group = parser.add_mutually_exclusive_group()
+    for n in range(8):
+        ch_group.add_argument(f"--CH{n}", action="store_true", help=f"Select channel {n} (with --ADC1/--ADC2)")
+
+    args = parser.parse_args()
+
+    adc_selected = 1 if args.ADC1 else (2 if args.ADC2 else None)
+    ch_selected = next((n for n in range(8) if getattr(args, f"CH{n}")), None)
+
+    if (adc_selected is None) != (ch_selected is None):
+        parser.error("--ADC1/--ADC2 e --CH0..--CH7 vanno usati insieme (oppure nessuno dei due, per testare tutto).")
+    if adc_selected == 2 and ch_selected is not None and ch_selected > 1:
+        parser.error("ADC2 ha solo i canali CH0 e CH1.")
+
+    if adc_selected is None:
+        args.selection = "ALL"
+        args.selection_label = "tutti i 10 canali"
+    else:
+        args.selection = f"ADC{adc_selected},CH{ch_selected}"
+        args.selection_label = f"solo ADC{adc_selected} canale {ch_selected}"
+
+    return args
 
 
 def read_line(ser: serial.Serial) -> str:
@@ -146,6 +179,7 @@ def main() -> int:
     args = parse_args()
 
     print(f"Apertura {args.port} @ {args.baud} baud...")
+    print(f"Modalita': {args.selection_label}")
     with serial.Serial(args.port, args.baud, timeout=None) as ser:
         print("Connesso. In attesa dei messaggi dalla scheda (Ctrl+C per interrompere).\n")
 
@@ -156,6 +190,10 @@ def main() -> int:
 
             if line == "CONFIG_BEGIN":
                 handle_config(ser, args.outdir, args.port, args.baud)
+                continue
+
+            if line == "SELECT_PROMPT":
+                ser.write((args.selection + "\r\n").encode())
                 continue
 
             fields = line.split(",")

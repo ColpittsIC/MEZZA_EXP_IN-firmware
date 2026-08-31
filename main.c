@@ -100,9 +100,9 @@ typedef struct
 #define USART3_TX_BUF_SIZE       32U
 #define USART3_NO_MESSAGE_TEXT   "No-Message"
 
-/* UART5 command channel (used by the ADC quality test to receive "go ahead"
-   commands from the PC script; content is currently ignored, only the fact
-   that *something* was received matters - see uart5_cmd_wait_for_command()). */
+/* UART5 command channel (used by the ADC quality test to receive commands from
+   the PC script: "go ahead" acknowledgements and the channel-selection reply -
+   see uart5_cmd_wait_for_line()). */
 #define UART5_CMD_RX_BUF_SIZE    32U
 
 /* ADC quality test (TEST_1): number of samples acquired per (channel, voltage)
@@ -189,9 +189,13 @@ static uint8_t           spi2_tx_byte = 0U;
 static uint8_t           spi2_rx_byte = 0U;
 #endif /* !TEST_ADC_QUALITY */
 
-/* UART5 command channel: interrupt-driven reception of "go ahead" commands from
-   the PC (ADC quality test script), same mailbox pattern as USART3 above. */
+/* UART5 command channel: interrupt-driven reception of commands from the PC
+   (ADC quality test script), same mailbox pattern as USART3 above.
+   uart5_cmd_last holds a trimmed, NUL-terminated copy of the last line
+   received, so its content survives independently of uart5_cmd_rx_buf being
+   overwritten by the next (re-armed) reception - see uart5_cmd_wait_for_line(). */
 static uint8_t           uart5_cmd_rx_buf[UART5_CMD_RX_BUF_SIZE];
+static char              uart5_cmd_last[UART5_CMD_RX_BUF_SIZE + 1U];
 static volatile uint32_t uart5_cmd_ready = 0U;
 static volatile uint32_t uart5_rx_need_rearm = 0U;
 
@@ -231,9 +235,11 @@ static void spi2_report(hal_uart_handle_t *huart);
 
 #if TEST_ADC_QUALITY
 static void uart5_cmd_arm_receive(hal_uart_handle_t *huart5);
-static void uart5_cmd_wait_for_command(void);
+static void uart5_cmd_wait_for_line(char *out_buf, uint32_t out_buf_size);
+static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_adc, uint32_t *out_ch);
 static void adc_quality_send_config(hal_uart_handle_t *huart5);
-static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2);
+static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2,
+                                    uint32_t test_all, uint32_t sel_adc, uint32_t sel_ch);
 #endif /* TEST_ADC_QUALITY */
 
 /**
@@ -302,8 +308,32 @@ int main(void)
        the exact ADC settings in effect for this run, before any data file. */
     adc_quality_send_config(huart5);
 
+    /* Ask the PC which channel(s) to test: "ALL" (default, no CLI selection
+       given) or "ADC<n>,CH<c>" for a single channel. Invalid/unparseable
+       replies fall back to testing everything, rather than getting stuck. */
+    uart_send_string(huart5, "Waiting for channel selection\r\n");
+    uart_send_string(huart5, "SELECT_PROMPT\r\n");
+
+    char     sel_buf[32];
+    uint32_t sel_adc = 0U;
+    uint32_t sel_ch  = 0U;
+    uint32_t test_all = 1U;
+
+    uart5_cmd_wait_for_line(sel_buf, sizeof(sel_buf));
+    if (strcmp(sel_buf, "ALL") != 0)
+    {
+      if (adc_quality_parse_select(sel_buf, &sel_adc, &sel_ch) != 0U)
+      {
+        test_all = 0U;
+      }
+      else
+      {
+        uart_send_string(huart5, "SELECT_INVALID - running the full test instead\r\n");
+      }
+    }
+
 #if (ADC_QUALITY_TEST_ID == 1U)
-    adc_quality_run_test_1(huart5, hadc1, hadc2);
+    adc_quality_run_test_1(huart5, hadc1, hadc2, test_all, sel_adc, sel_ch);
 #else
 #error "Unknown ADC_QUALITY_TEST_ID"
 #endif
@@ -676,8 +706,23 @@ void HAL_UART_RxCpltCallback(hal_uart_handle_t *huart, uint32_t size_byte, hal_u
   }
   else if (huart == mx_uart5_uart_gethandle())
   {
-    /* ADC quality test command channel: content is irrelevant, only the fact
-       that something was received matters (see uart5_cmd_wait_for_command()). */
+    /* ADC quality test command channel: the content matters here (e.g. the
+       channel selection reply), unlike a plain "go ahead" - see
+       uart5_cmd_wait_for_line(). */
+    uint32_t copy_len = size_byte;
+    if (copy_len >= sizeof(uart5_cmd_last))
+    {
+      copy_len = (uint32_t)sizeof(uart5_cmd_last) - 1U;
+    }
+    memcpy(uart5_cmd_last, uart5_cmd_rx_buf, copy_len);
+
+    while ((copy_len > 0U) && ((uart5_cmd_last[copy_len - 1U] == '\r') ||
+                               (uart5_cmd_last[copy_len - 1U] == '\n')))
+    {
+      copy_len--;
+    }
+    uart5_cmd_last[copy_len] = '\0';
+
     uart5_cmd_ready = 1U;
     uart5_rx_need_rearm = 1U;
   }
@@ -829,7 +874,7 @@ void SPI2_IRQHandler(void)
 
 /**
   * brief:  Arm (or re-arm) an interrupt-driven reception of a single command line
-  *         from the PC on UART5. Content is ignored; see uart5_cmd_wait_for_command().
+  *         from the PC on UART5. See uart5_cmd_wait_for_line().
   * retval: none
   */
 static void uart5_cmd_arm_receive(hal_uart_handle_t *huart5)
@@ -838,19 +883,76 @@ static void uart5_cmd_arm_receive(hal_uart_handle_t *huart5)
 }
 
 /**
-  * brief:  Block until the PC sends anything on UART5 (the "go ahead" for the next
-  *         acquisition step), then consume it. Reception itself stays fully
-  *         interrupt-driven (see HAL_UART_RxCpltCallback() / UART5_IRQHandler()); this
-  *         function only busy-waits on the resulting flag, which is fine here since
-  *         the ADC quality test has nothing else to do while waiting for the operator.
+  * brief:  Block until the PC sends a line on UART5 (a "go ahead" for the next
+  *         acquisition step, or the reply to a SELECT_PROMPT), then copy it into
+  *         out_buf. Reception itself stays fully interrupt-driven (see
+  *         HAL_UART_RxCpltCallback() / UART5_IRQHandler()); this function only
+  *         busy-waits on the resulting flag, which is fine here since the ADC
+  *         quality test has nothing else to do while waiting for the operator.
   * retval: none
   */
-static void uart5_cmd_wait_for_command(void)
+static void uart5_cmd_wait_for_line(char *out_buf, uint32_t out_buf_size)
 {
+  size_t msg_len;
+
   while (uart5_cmd_ready == 0U)
   {
   }
   uart5_cmd_ready = 0U;
+
+  msg_len = strlen(uart5_cmd_last);
+  if (msg_len >= out_buf_size)
+  {
+    msg_len = (size_t)out_buf_size - 1U;
+  }
+  memcpy(out_buf, uart5_cmd_last, msg_len);
+  out_buf[msg_len] = '\0';
+}
+
+/**
+  * brief:  Parse a channel-selection reply of the exact form "ADC<n>,CH<c>"
+  *         (e.g. "ADC1,CH3"), validating that <n> is 1 or 2 and <c> is in range
+  *         for that ADC (0..7 for ADC1, 0..1 for ADC2).
+  * retval: 1 and *out_adc/*out_ch filled if sel_buf parses and validates, 0 otherwise
+  */
+static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_adc, uint32_t *out_ch)
+{
+  uint32_t adc;
+  uint32_t ch;
+  uint32_t i;
+
+  if ((sel_buf[0] != 'A') || (sel_buf[1] != 'D') || (sel_buf[2] != 'C') ||
+      (sel_buf[3] < '1') || (sel_buf[3] > '2') ||
+      (sel_buf[4] != ',') || (sel_buf[5] != 'C') || (sel_buf[6] != 'H'))
+  {
+    return 0U;
+  }
+  adc = (uint32_t)(sel_buf[3] - '0');
+
+  if ((sel_buf[7] < '0') || (sel_buf[7] > '9'))
+  {
+    return 0U;
+  }
+  ch = 0U;
+  i = 7U;
+  while ((sel_buf[i] >= '0') && (sel_buf[i] <= '9'))
+  {
+    ch = (ch * 10U) + (uint32_t)(sel_buf[i] - '0');
+    i++;
+  }
+  if (sel_buf[i] != '\0')
+  {
+    return 0U; /* trailing garbage after the channel number */
+  }
+
+  if (((adc == 1U) && (ch > 7U)) || ((adc == 2U) && (ch > 1U)))
+  {
+    return 0U; /* out of range for that ADC */
+  }
+
+  *out_adc = adc;
+  *out_ch = ch;
+  return 1U;
 }
 
 /**
@@ -936,17 +1038,22 @@ static void adc_quality_send_config(hal_uart_handle_t *huart5)
   *         reference on that channel and confirm from the PC script (any data
   *         received on UART5), then acquire ADC_QUALITY_SAMPLES_PER_POINT samples of
   *         that single channel and stream them out as CSV lines.
+  *         If test_all == 0, every channel other than (sel_adc, sel_ch) is
+  *         skipped entirely - no READY/START/END, no acquisition, no wait - so
+  *         selecting a single channel from the PC script is near-instant rather
+  *         than still paying for the other 9 channels' worth of transfer time.
   *         Wire protocol (see also the project README):
   *           READY,ADC<n>,<pin>,<v>V              -- sent, then this firmware blocks
   *           (operator sets up the reference and sends anything from the PC script)
   *           START,ADC<n>,<pin>,<v>V,<count>
   *           <index>,<raw>,<adc_mV>,<vin_mV>       -- repeated <count> times
   *           END,ADC<n>,<pin>,<v>V
-  *         ... repeated for every (channel, voltage) combination, then:
+  *         ... repeated for every selected (channel, voltage) combination, then:
   *           ALL_DONE
   * retval: none
   */
-static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2)
+static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2,
+                                    uint32_t test_all, uint32_t sel_adc, uint32_t sel_ch)
 {
   char     line[64];
   int      len;
@@ -960,18 +1067,25 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
     uint8_t nb_channels_in_seq = (p_ch->adc_number == 1U) ? ADC1_NB_CHANNELS : ADC2_NB_CHANNELS;
     const char *adc_label = (p_ch->adc_number == 1U) ? "ADC1" : "ADC2";
 
+    if ((test_all == 0U) &&
+        ((p_ch->adc_number != sel_adc) || ((uint32_t)p_ch->channel_idx != sel_ch)))
+    {
+      continue; /* not the selected channel: skip silently, no transmission at all */
+    }
+
     for (v = 0U; v < ADC_QUALITY_VOLTAGE_COUNT; v++)
     {
       uint32_t voltage_v = adc_quality_voltages_v[v];
       uint32_t sample;
+      char     go_buf[8];
 
       len = snprintf(line, sizeof(line), "READY,ADC%u,%s,%luV\r\n",
                       (unsigned int)p_ch->adc_number, p_ch->pin_label, (unsigned long)voltage_v);
       (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
       /* Operator sets up the reference voltage on this channel, then confirms
-         from the PC script; content is irrelevant, only its arrival matters. */
-      uart5_cmd_wait_for_command();
+         from the PC script; content is irrelevant here, only its arrival matters. */
+      uart5_cmd_wait_for_line(go_buf, sizeof(go_buf));
 
       len = snprintf(line, sizeof(line), "START,ADC%u,%s,%luV,%lu\r\n",
                       (unsigned int)p_ch->adc_number, p_ch->pin_label, (unsigned long)voltage_v,
