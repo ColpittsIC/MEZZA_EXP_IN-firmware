@@ -9,7 +9,7 @@ Il firmware esegue quattro test hardware in loop, riportando i risultati via UAR
 3. **Test USART3**: invio periodico di un messaggio verso l'altro microcontrollore e ricezione della sua risposta, interamente a interrupt.
 4. **Test SPI2**: scambio periodico di un byte full-duplex con l'altro microcontrollore (questa scheda è SPI Master), interamente a interrupt.
 
-Esiste inoltre una **modalità di build separata**, selezionata dal flag `TEST_ADC_QUALITY` in cima a `main.c` (0 = firmware normale sopra, 1 = procedura di qualifica ADC pilotata da uno script Python, che sostituisce interamente il loop normale). Vedi [`adc_quality_test/README.md`](adc_quality_test/README.md).
+Esiste inoltre una **modalità di build separata**, selezionata dal flag `TEST_ADC_QUALITY` in cima a `main.c` (0 = firmware normale sopra, 1 = procedura di qualifica ADC pilotata da uno script Python, che sostituisce interamente il loop normale). Oltre ai 10 canali locali, questa modalità legge anche 8 canali di corrente 4-20mA dell'altra scheda tramite SPI2. Vedi [`adc_quality_test/README.md`](adc_quality_test/README.md).
 
 ## Hardware
 
@@ -94,6 +94,7 @@ Mappatura LED (anodo/catodo):
 - Baud rate: PCLK1/64 (~2.25 MHz con PCLK1 a 144 MHz).
 - Gestione **interamente a interrupt** (`HAL_SPI_TransmitReceive_IT`), un solo transfer da 1 byte al secondo.
 - **Nota sul pipelining full-duplex**: essendo la SPI sincrona e full-duplex, il byte ricevuto in un dato transfer è quello che lo slave aveva già preparato *prima* dell'inizio del transfer stesso, cioè corrisponde alla risposta al byte del ciclo *precedente*, non a quello appena inviato. Non è un baco: è una proprietà normale dei protocolli SPI full-duplex (identica a un registro a scorrimento).
+- In modalità `TEST_ADC_QUALITY` la stessa SPI2 (stesso ruolo Master) viene usata anche per un protocollo a comando/risposta a 4 byte, per leggere 8 canali di corrente 4-20mA dell'altra scheda - vedi [`adc_quality_test/README.md`](adc_quality_test/README.md) per il protocollo completo.
 - Il modulo SPI non era selezionato nel progetto CubeMX originale: `USE_HAL_SPI_MODULE` è stato abilitato a mano in `generated/hal/stm32c5xx_hal_conf.h`, e sia `generated/hal/mx_spi2.c` sia il driver `stm32c5xx_drivers/hal/stm32c5xx_hal_spi.c` sono referenziati direttamente in `cmake/files.cmake` (stesso motivo di USART3, vedi sotto).
 
 ## Comportamento del firmware

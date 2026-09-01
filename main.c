@@ -53,6 +53,15 @@ typedef struct
   const char *pin_label;    /* e.g. "PA0", for messages and for the PC script's filenames */
 } adc_quality_channel_t;
 
+/* Which "device" a channel selection refers to: this board's ADC1/ADC2, or one of
+   the other board's 8 remote 4-20mA current-loop channels (read over SPI2). */
+typedef enum
+{
+  ADC_QUALITY_DEVICE_ADC1    = 0,
+  ADC_QUALITY_DEVICE_ADC2    = 1,
+  ADC_QUALITY_DEVICE_CURRENT = 2
+} adc_quality_device_t;
+
 typedef struct
 {
   hal_gpio_t  port;
@@ -117,6 +126,34 @@ typedef struct
 #if TEST_ADC_QUALITY
 static const uint32_t adc_quality_voltages_v[] = { 0U, 2U, 4U, 6U, 8U, 10U };
 #define ADC_QUALITY_VOLTAGE_COUNT       (sizeof(adc_quality_voltages_v) / sizeof(adc_quality_voltages_v[0]))
+
+/* Remote 4-20mA current-loop channels on the other board, read over SPI2 (see
+   adc_current_read_channel() / the SPI2 command-response protocol below).
+   Same MCU/ADC format as this board (12-bit, external VREF+ = 3.3 V, so
+   ADC_VREF_MV is reused as-is) - the raw code is converted to a current using
+   Ohm's law over the precision shunt resistor in series with the loop:
+   current = V_adc / R_SHUNT (4-20 mA maps to 0.6-3.0 V across 150 ohm, safely
+   inside the 3.3 V ADC range). */
+#define ADC_CURRENT_CHANNEL_COUNT       8U
+#define ADC_CURRENT_SHUNT_OHM           150U
+static const uint32_t adc_current_nominal_ma[] = { 4U, 8U, 12U, 16U, 20U };
+#define ADC_CURRENT_POINT_COUNT         (sizeof(adc_current_nominal_ma) / sizeof(adc_current_nominal_ma[0]))
+
+/* SPI2 command/response protocol with the other board (see the project README
+   and the cross-board prompt for the full description). Fixed 4-byte frames,
+   master-initiated, request/poll style:
+     Master TX: [CMD, CH, 0x00, 0x00]
+     Slave  TX (reflects the PREVIOUS transaction, per SPI full-duplex
+                pipelining - see the SPI2 note further down): [STATUS, RAW_HI, RAW_LO, CH_ECHO] */
+#define SPI_CURRENT_FRAME_SIZE          4U
+#define SPI_CURRENT_CMD_START           0x01U
+#define SPI_CURRENT_CMD_POLL            0x02U
+#define SPI_CURRENT_STATUS_READY        0x02U
+#define SPI_CURRENT_POLL_MAX_ATTEMPTS   20000U /* generous safety margin, not a tuned value */
+/* Busy-wait bound for a single 4-byte IT transfer to complete (spi_current_xfer()):
+   a few microseconds of SPI clocking at ~2.25 MHz, so this is a generous margin
+   against a genuinely stuck peripheral, not a tuned value either. */
+#define SPI_CURRENT_XFER_WAIT_ATTEMPTS  1000000U
 #endif /* TEST_ADC_QUALITY */
 
 /* Private macro -------------------------------------------------------------*/
@@ -188,10 +225,20 @@ static char              usart3_tx_buf[USART3_TX_BUF_SIZE];
    reflects the slave's reply to the *previous* byte we sent, not the one just
    sent - this is a normal property of synchronous full-duplex SPI, not a bug. */
 static volatile uint32_t spi2_xfer_complete = 0U;
+static volatile uint32_t spi2_xfer_error = 0U;
 #if !TEST_ADC_QUALITY
 static uint8_t           spi2_tx_byte = 0U;
 static uint8_t           spi2_rx_byte = 0U;
 #endif /* !TEST_ADC_QUALITY */
+
+#if TEST_ADC_QUALITY
+/* SPI2 4-byte command/response frame buffers for the remote current-loop
+   channels (see spi_current_xfer() / adc_current_read_channel()). Separate
+   from spi2_tx_byte/spi2_rx_byte above (1-byte ping-pong, normal mode only)
+   since the two modes are mutually exclusive but use different frame sizes. */
+static uint8_t spi_current_tx_frame[SPI_CURRENT_FRAME_SIZE];
+static uint8_t spi_current_rx_frame[SPI_CURRENT_FRAME_SIZE];
+#endif /* TEST_ADC_QUALITY */
 
 /* UART5 command channel: interrupt-driven reception of commands from the PC
    (ADC quality test script), same mailbox pattern as USART3 above.
@@ -240,10 +287,13 @@ static void spi2_report(hal_uart_handle_t *huart);
 #if TEST_ADC_QUALITY
 static void uart5_cmd_arm_receive(hal_uart_handle_t *huart5);
 static void uart5_cmd_wait_for_line(char *out_buf, uint32_t out_buf_size);
-static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_adc, uint32_t *out_ch);
+static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_device, uint32_t *out_ch);
 static void adc_quality_send_config(hal_uart_handle_t *huart5);
+static uint32_t spi_current_xfer(hal_spi_handle_t *hspi2, const uint8_t *tx_frame);
+static uint32_t adc_current_read_channel(hal_spi_handle_t *hspi2, uint32_t ch, uint32_t *out_raw);
 static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2,
-                                    uint32_t test_all, uint32_t sel_adc, uint32_t sel_ch);
+                                    hal_spi_handle_t *hspi2, uint32_t test_all, uint32_t sel_device,
+                                    uint32_t sel_ch);
 #endif /* TEST_ADC_QUALITY */
 
 /**
@@ -269,9 +319,9 @@ int main(void)
     hal_adc_handle_t  *hadc1   = mx_adc1_gethandle();
     hal_adc_handle_t  *hadc2   = mx_adc2_gethandle();
     hal_uart_handle_t *huart5  = mx_uart5_uart_gethandle();
+    hal_spi_handle_t  *hspi2   = mx_spi2_gethandle();
 #if !TEST_ADC_QUALITY
     hal_uart_handle_t *husart3 = mx_usart3_uart_gethandle();
-    hal_spi_handle_t  *hspi2   = mx_spi2_gethandle();
 #endif /* !TEST_ADC_QUALITY */
 
     /* Diagnostic message sent as early as possible: if this never shows up on the
@@ -313,20 +363,22 @@ int main(void)
     adc_quality_send_config(huart5);
 
     /* Ask the PC which channel(s) to test: "ALL" (default, no CLI selection
-       given) or "ADC<n>,CH<c>" for a single channel. Invalid/unparseable
+       given), "ADC<n>,CH<c>" for a single local ADC channel, or
+       "CURRENT,CH<c>" for a single remote 4-20mA current-loop channel (read
+       over SPI2 - see adc_current_read_channel()). Invalid/unparseable
        replies fall back to testing everything, rather than getting stuck. */
     uart_send_string(huart5, "Waiting for channel selection\r\n");
     uart_send_string(huart5, "SELECT_PROMPT\r\n");
 
     char     sel_buf[32];
-    uint32_t sel_adc = 0U;
-    uint32_t sel_ch  = 0U;
-    uint32_t test_all = 1U;
+    uint32_t sel_device = 0U;
+    uint32_t sel_ch     = 0U;
+    uint32_t test_all   = 1U;
 
     uart5_cmd_wait_for_line(sel_buf, sizeof(sel_buf));
     if (strcmp(sel_buf, "ALL") != 0)
     {
-      if (adc_quality_parse_select(sel_buf, &sel_adc, &sel_ch) != 0U)
+      if (adc_quality_parse_select(sel_buf, &sel_device, &sel_ch) != 0U)
       {
         test_all = 0U;
       }
@@ -337,7 +389,7 @@ int main(void)
     }
 
 #if (ADC_QUALITY_TEST_ID == 1U)
-    adc_quality_run_test_1(huart5, hadc1, hadc2, test_all, sel_adc, sel_ch);
+    adc_quality_run_test_1(huart5, hadc1, hadc2, hspi2, test_all, sel_device, sel_ch);
 #else
 #error "Unknown ADC_QUALITY_TEST_ID"
 #endif
@@ -856,13 +908,16 @@ void HAL_SPI_TxRxCpltCallback(hal_spi_handle_t *hspi)
 
 /**
   * brief:  HAL_SPI callback: fires from inside HAL_SPI_IRQHandler() on a transfer
-  *         error (overrun, mode fault, CRC, ...). The next iteration's
-  *         spi2_start_xfer() will simply start a fresh transfer.
+  *         error (overrun, mode fault, CRC, ...). In the normal demo loop the
+  *         next iteration's spi2_start_xfer() simply starts a fresh transfer;
+  *         in TEST_ADC_QUALITY mode spi_current_xfer()'s wait loop checks
+  *         spi2_xfer_error to avoid hanging forever on a genuine SPI fault.
   * retval: none
   */
 void HAL_SPI_ErrorCallback(hal_spi_handle_t *hspi)
 {
   (void)hspi;
+  spi2_xfer_error = 1U;
 }
 
 /**
@@ -915,30 +970,45 @@ static void uart5_cmd_wait_for_line(char *out_buf, uint32_t out_buf_size)
 
 /**
   * brief:  Parse a channel-selection reply of the exact form "ADC<n>,CH<c>"
-  *         (e.g. "ADC1,CH3"), validating that <n> is 1 or 2 and <c> is in range
-  *         for that ADC (0..7 for ADC1, 0..1 for ADC2).
-  * retval: 1 and *out_adc/*out_ch filled if sel_buf parses and validates, 0 otherwise
+  *         (e.g. "ADC1,CH3", <n> is 1 or 2) or "CURRENT,CH<c>" (e.g.
+  *         "CURRENT,CH5", for one of the other board's 8 remote 4-20mA
+  *         current-loop channels), validating that <c> is in range for the
+  *         selected device (0..7 for ADC1/CURRENT, 0..1 for ADC2).
+  * retval: 1 and *out_device/*out_ch filled if sel_buf parses and validates, 0 otherwise
   */
-static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_adc, uint32_t *out_ch)
+static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_device, uint32_t *out_ch)
 {
-  uint32_t adc;
+  uint32_t device;
   uint32_t ch;
   uint32_t i;
+  uint32_t max_ch;
 
-  if ((sel_buf[0] != 'A') || (sel_buf[1] != 'D') || (sel_buf[2] != 'C') ||
-      (sel_buf[3] < '1') || (sel_buf[3] > '2') ||
-      (sel_buf[4] != ',') || (sel_buf[5] != 'C') || (sel_buf[6] != 'H'))
+  if ((sel_buf[0] == 'A') && (sel_buf[1] == 'D') && (sel_buf[2] == 'C') &&
+      (sel_buf[3] >= '1') && (sel_buf[3] <= '2') &&
+      (sel_buf[4] == ',') && (sel_buf[5] == 'C') && (sel_buf[6] == 'H'))
+  {
+    device = (sel_buf[3] == '1') ? (uint32_t)ADC_QUALITY_DEVICE_ADC1 : (uint32_t)ADC_QUALITY_DEVICE_ADC2;
+    max_ch = (sel_buf[3] == '1') ? 7U : 1U;
+    i = 7U;
+  }
+  else if ((sel_buf[0] == 'C') && (sel_buf[1] == 'U') && (sel_buf[2] == 'R') && (sel_buf[3] == 'R') &&
+           (sel_buf[4] == 'E') && (sel_buf[5] == 'N') && (sel_buf[6] == 'T') &&
+           (sel_buf[7] == ',') && (sel_buf[8] == 'C') && (sel_buf[9] == 'H'))
+  {
+    device = (uint32_t)ADC_QUALITY_DEVICE_CURRENT;
+    max_ch = ADC_CURRENT_CHANNEL_COUNT - 1U;
+    i = 10U;
+  }
+  else
   {
     return 0U;
   }
-  adc = (uint32_t)(sel_buf[3] - '0');
 
-  if ((sel_buf[7] < '0') || (sel_buf[7] > '9'))
+  if ((sel_buf[i] < '0') || (sel_buf[i] > '9'))
   {
     return 0U;
   }
   ch = 0U;
-  i = 7U;
   while ((sel_buf[i] >= '0') && (sel_buf[i] <= '9'))
   {
     ch = (ch * 10U) + (uint32_t)(sel_buf[i] - '0');
@@ -948,15 +1018,95 @@ static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_adc,
   {
     return 0U; /* trailing garbage after the channel number */
   }
-
-  if (((adc == 1U) && (ch > 7U)) || ((adc == 2U) && (ch > 1U)))
+  if (ch > max_ch)
   {
-    return 0U; /* out of range for that ADC */
+    return 0U; /* out of range for that device */
   }
 
-  *out_adc = adc;
+  *out_device = device;
   *out_ch = ch;
   return 1U;
+}
+
+/**
+  * brief:  Run one 4-byte command/response SPI2 transaction with the other
+  *         board (tx_frame -> spi_current_tx_frame, response left in
+  *         spi_current_rx_frame for the caller to read). Blocking (busy-waits
+  *         on the HAL_SPI_TxRxCpltCallback()/HAL_SPI_ErrorCallback() flags),
+  *         bounded by SPI_CURRENT_XFER_WAIT_ATTEMPTS so a stuck peripheral
+  *         cannot hang the test forever.
+  * retval: 1 on success, 0 on HAL start failure, SPI error, or timeout
+  */
+static uint32_t spi_current_xfer(hal_spi_handle_t *hspi2, const uint8_t *tx_frame)
+{
+  uint32_t attempts;
+
+  memcpy(spi_current_tx_frame, tx_frame, SPI_CURRENT_FRAME_SIZE);
+
+  spi2_xfer_complete = 0U;
+  spi2_xfer_error = 0U;
+  if (HAL_SPI_TransmitReceive_IT(hspi2, spi_current_tx_frame, spi_current_rx_frame,
+                                  SPI_CURRENT_FRAME_SIZE) != HAL_OK)
+  {
+    return 0U;
+  }
+
+  attempts = 0U;
+  while ((spi2_xfer_complete == 0U) && (spi2_xfer_error == 0U))
+  {
+    attempts++;
+    if (attempts > SPI_CURRENT_XFER_WAIT_ATTEMPTS)
+    {
+      return 0U;
+    }
+  }
+
+  return (spi2_xfer_error == 0U) ? 1U : 0U;
+}
+
+/**
+  * brief:  Read one raw ADC sample from the other board's remote current-loop
+  *         channel "ch" (0..7), over the SPI2 command/response protocol:
+  *         first a START command tells the slave which channel to convert,
+  *         then repeated POLL commands ask whether the result is ready yet -
+  *         because of SPI full-duplex pipelining, the response to a given
+  *         transfer reflects the PREVIOUS transfer's command, so the START's
+  *         result is only visible in the response to the first POLL. The
+  *         response's channel-echo byte is checked against "ch" on every
+  *         READY status, to reject a stale/mismatched reply.
+  * retval: 1 and *out_raw filled on success, 0 on SPI error or poll timeout
+  */
+static uint32_t adc_current_read_channel(hal_spi_handle_t *hspi2, uint32_t ch, uint32_t *out_raw)
+{
+  uint8_t  tx_frame[SPI_CURRENT_FRAME_SIZE];
+  uint32_t attempts;
+
+  tx_frame[0] = SPI_CURRENT_CMD_START;
+  tx_frame[1] = (uint8_t)ch;
+  tx_frame[2] = 0U;
+  tx_frame[3] = 0U;
+  if (spi_current_xfer(hspi2, tx_frame) == 0U)
+  {
+    return 0U;
+  }
+
+  tx_frame[0] = SPI_CURRENT_CMD_POLL;
+  for (attempts = 0U; attempts < SPI_CURRENT_POLL_MAX_ATTEMPTS; attempts++)
+  {
+    if (spi_current_xfer(hspi2, tx_frame) == 0U)
+    {
+      return 0U;
+    }
+
+    if ((spi_current_rx_frame[0] == SPI_CURRENT_STATUS_READY) &&
+        (spi_current_rx_frame[3] == (uint8_t)ch))
+    {
+      *out_raw = ((uint32_t)spi_current_rx_frame[1] << 8) | (uint32_t)spi_current_rx_frame[2];
+      return 1U;
+    }
+  }
+
+  return 0U; /* gave up waiting for the conversion to become ready */
 }
 
 /**
@@ -1065,31 +1215,59 @@ static void adc_quality_send_config(hal_uart_handle_t *huart5)
   len += snprintf(&line[len], sizeof(line) - (size_t)len, "\r\n");
   (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
+  /* Remote 4-20mA current-loop channels, read from the other board over SPI2
+     (see adc_current_read_channel()); raw codes are converted to a current
+     using Ohm's law over this shunt resistor. */
+  len = snprintf(line, sizeof(line), "current_channel_count=%u\r\n", (unsigned int)ADC_CURRENT_CHANNEL_COUNT);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  len = snprintf(line, sizeof(line), "current_shunt_ohm=%u\r\n", (unsigned int)ADC_CURRENT_SHUNT_OHM);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  /* current_nominal_mA=4,8,12,16,20 */
+  len = snprintf(line, sizeof(line), "current_nominal_mA=");
+  for (i = 0U; i < ADC_CURRENT_POINT_COUNT; i++)
+  {
+    len += snprintf(&line[len], sizeof(line) - (size_t)len, "%s%lu",
+                     (i == 0U) ? "" : ",", (unsigned long)adc_current_nominal_ma[i]);
+  }
+  len += snprintf(&line[len], sizeof(line) - (size_t)len, "\r\n");
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
   uart_send_string(huart5, "CONFIG_END\r\n");
 }
 
 /**
   * brief:  TEST_1: for each channel in adc_quality_channels[] and each nominal
-  *         voltage in adc_quality_voltages_v[], wait for the operator to set up the
-  *         reference on that channel and confirm from the PC script (any data
-  *         received on UART5), then acquire ADC_QUALITY_SAMPLES_PER_POINT samples of
-  *         that single channel and stream them out as CSV lines.
-  *         If test_all == 0, every channel other than (sel_adc, sel_ch) is
-  *         skipped entirely - no READY/START/END, no acquisition, no wait - so
-  *         selecting a single channel from the PC script is near-instant rather
-  *         than still paying for the other 9 channels' worth of transfer time.
+  *         voltage in adc_quality_voltages_v[], THEN for each of the other
+  *         board's 8 remote 4-20mA current-loop channels and each nominal
+  *         current in adc_current_nominal_ma[], wait for the operator to set
+  *         up the reference and confirm from the PC script (any data
+  *         received on UART5), then acquire ADC_QUALITY_SAMPLES_PER_POINT
+  *         samples of that single channel and stream them out as CSV lines.
+  *         If test_all == 0, every (device, channel) other than
+  *         (sel_device, sel_ch) is skipped entirely - no READY/START/END, no
+  *         acquisition, no wait - so selecting a single channel from the PC
+  *         script is near-instant rather than still paying for every other
+  *         channel's worth of transfer time.
   *         Wire protocol (see also the project README):
-  *           READY,ADC<n>,<pin>,<v>V              -- sent, then this firmware blocks
-  *           (operator sets up the reference and sends anything from the PC script)
+  *           READY,ADC<n>,<pin>,<v>V                 -- local ADC1/ADC2 channel
+  *           READY,CURRENT,CH<c>,<i>mA                -- remote current-loop channel
+  *           (sent, then this firmware blocks: operator sets up the
+  *           reference/loop current, then the PC script sends anything)
   *           START,ADC<n>,<pin>,<v>V,<count>
-  *           <index>,<raw>,<adc_mV>,<vin_mV>       -- repeated <count> times
+  *           <index>,<raw>,<adc_mV>,<vin_mV>          -- repeated <count> times
   *           END,ADC<n>,<pin>,<v>V
-  *         ... repeated for every selected (channel, voltage) combination, then:
+  *           START,CURRENT,CH<c>,<i>mA,<count>
+  *           <index>,<raw>,<adc_mV>,<current_uA>      -- repeated <count> times
+  *           END,CURRENT,CH<c>,<i>mA
+  *         ... repeated for every selected combination, then:
   *           ALL_DONE
   * retval: none
   */
 static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2,
-                                    uint32_t test_all, uint32_t sel_adc, uint32_t sel_ch)
+                                    hal_spi_handle_t *hspi2, uint32_t test_all, uint32_t sel_device,
+                                    uint32_t sel_ch)
 {
   char     line[64];
   int      len;
@@ -1102,9 +1280,11 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
     hal_adc_handle_t *hadc = (p_ch->adc_number == 1U) ? hadc1 : hadc2;
     uint8_t nb_channels_in_seq = (p_ch->adc_number == 1U) ? ADC1_NB_CHANNELS : ADC2_NB_CHANNELS;
     const char *adc_label = (p_ch->adc_number == 1U) ? "ADC1" : "ADC2";
+    uint32_t ch_device = (p_ch->adc_number == 1U) ? (uint32_t)ADC_QUALITY_DEVICE_ADC1
+                                                   : (uint32_t)ADC_QUALITY_DEVICE_ADC2;
 
     if ((test_all == 0U) &&
-        ((p_ch->adc_number != sel_adc) || ((uint32_t)p_ch->channel_idx != sel_ch)))
+        ((ch_device != sel_device) || ((uint32_t)p_ch->channel_idx != sel_ch)))
     {
       continue; /* not the selected channel: skip silently, no transmission at all */
     }
@@ -1148,6 +1328,59 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
 
       len = snprintf(line, sizeof(line), "END,ADC%u,%s,%luV\r\n",
                       (unsigned int)p_ch->adc_number, p_ch->pin_label, (unsigned long)voltage_v);
+      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+    }
+  }
+
+  for (ch = 0U; ch < ADC_CURRENT_CHANNEL_COUNT; ch++)
+  {
+    if ((test_all == 0U) &&
+        (((uint32_t)ADC_QUALITY_DEVICE_CURRENT != sel_device) || (ch != sel_ch)))
+    {
+      continue; /* not the selected channel: skip silently, no transmission at all */
+    }
+
+    for (v = 0U; v < ADC_CURRENT_POINT_COUNT; v++)
+    {
+      uint32_t current_ma = adc_current_nominal_ma[v];
+      uint32_t sample;
+      char     go_buf[8];
+
+      len = snprintf(line, sizeof(line), "READY,CURRENT,CH%lu,%lumA\r\n",
+                      (unsigned long)ch, (unsigned long)current_ma);
+      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+      /* Operator sets up the loop current on this channel, then confirms
+         from the PC script; content is irrelevant here, only its arrival matters. */
+      uart5_cmd_wait_for_line(go_buf, sizeof(go_buf));
+
+      len = snprintf(line, sizeof(line), "START,CURRENT,CH%lu,%lumA,%lu\r\n",
+                      (unsigned long)ch, (unsigned long)current_ma,
+                      (unsigned long)ADC_QUALITY_SAMPLES_PER_POINT);
+      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+      for (sample = 0U; sample < ADC_QUALITY_SAMPLES_PER_POINT; sample++)
+      {
+        uint32_t raw;
+        int32_t  adc_mv;
+        int32_t  current_ua;
+
+        if (adc_current_read_channel(hspi2, ch, &raw) == 0U)
+        {
+          adc_test_error(huart5, "ADC quality test: remote current channel read failed");
+        }
+
+        adc_mv = HAL_ADC_CALC_DATA_TO_VOLTAGE(ADC_VREF_MV, raw, HAL_ADC_RESOLUTION_12_BIT);
+        /* current_uA = V_mV * 1000 / R_ohm (Ohm's law, scaled to stay in integers) */
+        current_ua = (int32_t)(((int64_t)adc_mv * 1000) / (int64_t)ADC_CURRENT_SHUNT_OHM);
+
+        len = snprintf(line, sizeof(line), "%lu,%ld,%ld,%ld\r\n",
+                        (unsigned long)sample, (long)raw, (long)adc_mv, (long)current_ua);
+        (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      }
+
+      len = snprintf(line, sizeof(line), "END,CURRENT,CH%lu,%lumA\r\n",
+                      (unsigned long)ch, (unsigned long)current_ma);
       (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
     }
   }

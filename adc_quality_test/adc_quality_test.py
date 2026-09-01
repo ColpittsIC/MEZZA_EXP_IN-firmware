@@ -7,32 +7,40 @@ normal demo firmware) while it is built and flashed with TEST_ADC_QUALITY = 1
 (see main.c). Before the first channel, the board sends one "CONFIG_BEGIN" /
 "CONFIG_END" block of "key=value" lines describing the exact ADC settings for
 this run (resolution, VREF, clock, sampling time, attenuation factor, channel
-and voltage lists, ...), then "SELECT_PROMPT" and blocks: this script replies
-with "ALL" (default, no channel selected on the command line) or
-"ADC<n>,CH<c>" (single-channel run, see --ADC1/--ADC2 and --CH0..--CH7 below).
-Then, for each selected (ADC, channel, nominal voltage) combination:
+and voltage lists, current-loop shunt/channel count/nominal currents, ...),
+then "SELECT_PROMPT" and blocks: this script replies with "ALL" (default, no
+channel selected on the command line), "ADC<n>,CH<c>" (single local ADC
+channel, see --ADC1/--ADC2 and --CH0..--CH7 below), or "CURRENT,CH<c>"
+(single remote 4-20mA current-loop channel on the other board, read by this
+board over SPI2 - see --ADC_CURRENT below). Then, for each selected
+combination:
 
-  1. Sends "READY,ADC<n>,<pin>,<v>V" and then blocks, waiting for anything to
-     arrive on UART5.
-  2. Once this script sends "GO", the board replies "START,ADC<n>,<pin>,<v>V,<count>"
-     followed by <count> CSV lines "<index>,<raw>,<adc_mV>,<vin_mV>", then "END,...".
+  1. Sends "READY,ADC<n>,<pin>,<v>V" or "READY,CURRENT,CH<c>,<i>mA" and then
+     blocks, waiting for anything to arrive on UART5.
+  2. Once this script sends "GO", the board replies with
+     "START,ADC<n>,<pin>,<v>V,<count>" followed by <count> CSV lines
+     "<index>,<raw>,<adc_mV>,<vin_mV>", or "START,CURRENT,CH<c>,<i>mA,<count>"
+     followed by <count> CSV lines "<index>,<raw>,<adc_mV>,<current_uA>",
+     then "END,...".
   3. This repeats for every combination; the board finally sends "ALL_DONE".
 
 Usage:
-    python adc_quality_test.py COM5                    # test all 10 channels
-    python adc_quality_test.py COM5 --ADC1 --CH3        # test only ADC1 channel 3 (PA3)
-    python adc_quality_test.py COM5 --ADC2 --CH1        # test only ADC2 channel 1 (PB1)
+    python adc_quality_test.py COM5                       # test everything (10 local + 8 remote channels)
+    python adc_quality_test.py COM5 --ADC1 --CH3           # test only ADC1 channel 3 (PA3)
+    python adc_quality_test.py COM5 --ADC2 --CH1           # test only ADC2 channel 1 (PB1)
+    python adc_quality_test.py COM5 --ADC_CURRENT --CH5    # test only remote current-loop channel 5
 
 This script:
   - Prints every line it does not specifically recognize (e.g. the firmware's
     boot messages), so nothing is silently swallowed.
   - Saves the CONFIG block to "adc_config.json" in the --outdir folder, before
     any data file is written.
-  - On each READY, prompts the operator to set up the reference voltage on the
-    given channel, waits for Enter, then tells the board to go ahead.
-  - Saves each completed series to its own CSV file, named
-    "ADC<n>_<pin>_<v>V.csv", inside the --outdir folder (default: "data",
-    next to this script).
+  - On each READY, prompts the operator to set up the reference voltage (or
+    loop current) on the given channel, waits for Enter, then tells the board
+    to go ahead.
+  - Saves each completed series to its own CSV file, named "ADC<n>_<pin>_<v>V.csv"
+    (local channels) or "CURRENT_CH<c>_<i>mA.csv" (remote current-loop channels),
+    inside the --outdir folder (default: "data", next to this script).
 """
 
 import argparse
@@ -56,30 +64,38 @@ def parse_args():
     parser.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR,
                          help=f"Folder where the CSV files are saved (default: {DEFAULT_OUTDIR})")
 
-    adc_group = parser.add_mutually_exclusive_group()
-    adc_group.add_argument("--ADC1", action="store_true", help="Test only ADC1 (requires one of --CH0..--CH7)")
-    adc_group.add_argument("--ADC2", action="store_true", help="Test only ADC2 (requires --CH0 or --CH1)")
+    device_group = parser.add_mutually_exclusive_group()
+    device_group.add_argument("--ADC1", action="store_true", help="Test only ADC1 (requires one of --CH0..--CH7)")
+    device_group.add_argument("--ADC2", action="store_true", help="Test only ADC2 (requires --CH0 or --CH1)")
+    device_group.add_argument("--ADC_CURRENT", action="store_true",
+                               help="Test only one remote 4-20mA current-loop channel on the other board "
+                                    "(requires one of --CH0..--CH7)")
 
     ch_group = parser.add_mutually_exclusive_group()
     for n in range(8):
-        ch_group.add_argument(f"--CH{n}", action="store_true", help=f"Select channel {n} (with --ADC1/--ADC2)")
+        ch_group.add_argument(f"--CH{n}", action="store_true",
+                               help=f"Select channel {n} (with --ADC1/--ADC2/--ADC_CURRENT)")
 
     args = parser.parse_args()
 
-    adc_selected = 1 if args.ADC1 else (2 if args.ADC2 else None)
+    device = "ADC1" if args.ADC1 else ("ADC2" if args.ADC2 else ("CURRENT" if args.ADC_CURRENT else None))
     ch_selected = next((n for n in range(8) if getattr(args, f"CH{n}")), None)
 
-    if (adc_selected is None) != (ch_selected is None):
-        parser.error("--ADC1/--ADC2 e --CH0..--CH7 vanno usati insieme (oppure nessuno dei due, per testare tutto).")
-    if adc_selected == 2 and ch_selected is not None and ch_selected > 1:
+    if (device is None) != (ch_selected is None):
+        parser.error("--ADC1/--ADC2/--ADC_CURRENT e --CH0..--CH7 vanno usati insieme "
+                      "(oppure nessuno dei due, per testare tutto).")
+    if device == "ADC2" and ch_selected is not None and ch_selected > 1:
         parser.error("ADC2 ha solo i canali CH0 e CH1.")
 
-    if adc_selected is None:
+    if device is None:
         args.selection = "ALL"
-        args.selection_label = "tutti i 10 canali"
+        args.selection_label = "tutti i canali (10 locali + 8 remoti in corrente)"
+    elif device == "CURRENT":
+        args.selection = f"CURRENT,CH{ch_selected}"
+        args.selection_label = f"solo canale corrente remoto {ch_selected}"
     else:
-        args.selection = f"ADC{adc_selected},CH{ch_selected}"
-        args.selection_label = f"solo ADC{adc_selected} canale {ch_selected}"
+        args.selection = f"{device},CH{ch_selected}"
+        args.selection_label = f"solo {device} canale {ch_selected}"
 
     return args
 
@@ -124,17 +140,22 @@ def handle_config(ser: serial.Serial, outdir: Path, port: str, baud: int) -> dic
 
 
 def handle_ready(ser: serial.Serial, fields: list[str]) -> None:
-    """fields = ["READY", "ADC<n>", "<pin>", "<v>V"]"""
+    """fields = ["READY", "ADC<n>", "<pin>", "<v>V"] or ["READY", "CURRENT", "CH<c>", "<i>mA"]"""
     adc_label, pin_label, voltage_label = fields[1], fields[2], fields[3]
     print(f"\n=== {adc_label} / {pin_label} / {voltage_label} ===")
-    input(f"Collega/imposta il riferimento a {voltage_label} su {pin_label} ({adc_label}), poi premi Enter... ")
+    if adc_label == "CURRENT":
+        input(f"Imposta il loop a {voltage_label} sul canale remoto {pin_label}, poi premi Enter... ")
+    else:
+        input(f"Collega/imposta il riferimento a {voltage_label} su {pin_label} ({adc_label}), poi premi Enter... ")
     ser.write(b"GO\r\n")
 
 
 def handle_start(ser: serial.Serial, fields: list[str], outdir: Path) -> None:
-    """fields = ["START", "ADC<n>", "<pin>", "<v>V", "<count>"]"""
+    """fields = ["START", "ADC<n>", "<pin>", "<v>V", "<count>"]
+    or ["START", "CURRENT", "CH<c>", "<i>mA", "<count>"]"""
     adc_label, pin_label, voltage_label, count_str = fields[1], fields[2], fields[3], fields[4]
     count = int(count_str)
+    is_current = adc_label == "CURRENT"
 
     outdir.mkdir(parents=True, exist_ok=True)
     filename = outdir / f"{adc_label}_{pin_label}_{voltage_label}.csv"
@@ -144,7 +165,7 @@ def handle_start(ser: serial.Serial, fields: list[str], outdir: Path) -> None:
 
     with open(filename, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["sample_index", "raw", "adc_mV", "vin_mV"])
+        writer.writerow(["sample_index", "raw", "adc_mV", "current_uA" if is_current else "vin_mV"])
 
         received = 0
         while received < count:
