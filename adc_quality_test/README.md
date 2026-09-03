@@ -120,9 +120,15 @@ tensione/corrente sono generiche - `nominal`/`nominal_unit`, `value_mean`/
   prima nelle tabelle.
 
 Risultati: due CSV di riepilogo in `<cartella>/analysis/` (`summary_per_point.csv`,
-`summary_per_channel.csv`), stampati anche a schermo. Con `--plot`: un grafico
-guadagno/offset + residui per ciascun canale, più un confronto a barre tra
-tutti i canali, sempre in `<cartella>/analysis/`.
+`summary_per_channel.csv`), stampati anche a schermo. Con `--plot`, sempre in
+`<cartella>/analysis/`: un grafico guadagno/offset + residui per ciascun canale
+(serve almeno 2 punti nominali acquisiti per quel canale, altrimenti viene
+saltato), più due confronti a barre separati - uno per i canali di tensione
+(`all_channels_comparison_voltage.png`) e uno per i canali di corrente
+(`all_channels_comparison_current.png`), dato che le due famiglie usano unità
+diverse (mV vs uA) e tipicamente un numero diverso di canali (10 vs 8). Se una
+delle due famiglie non ha ancora dati, il relativo confronto viene
+semplicemente omesso.
 
 > Nota sulla "risoluzione effettiva stimata": è un indicatore informale basato
 > sulla dispersione dei codici a tensione costante (DC), non l'ENOB standard
@@ -179,7 +185,64 @@ la resistenza di precisione in serie al loop di corrente, sull'altra scheda),
 Il contenuto del comando mandato dallo script per "sbloccare" la scheda dopo
 una `READY` non viene interpretato dal firmware: basta che arrivi *qualcosa*.
 La risposta a `SELECT_PROMPT` invece viene interpretata (deve essere `ALL`,
-`ADC<1|2>,CH<n>` oppure `CURRENT,CH<n>` esatto).
+`ADC<1|2>,CH<n>`, `CURRENT,CH<n>` oppure `DYNAMIC,<device>,CH<n>,<duration_ms>`
+esatto - quest'ultima è descritta nella sezione seguente).
+
+## Acquisizione dinamica a tempo (`adc_dynamic_acquisition.py`)
+
+Oltre alla procedura di qualifica sopra (canali fissi, punti nominali fissi,
+10000 campioni per punto), c'è un secondo script per un'acquisizione **di un
+solo canale, per una durata scelta da riga di comando**, invece che per un
+numero di campioni fisso:
+
+```
+python adc_dynamic_acquisition.py COM5 --ADC1 --CH3 --duration 10        # ADC1 canale 3 (PA3), 10 s
+python adc_dynamic_acquisition.py COM5 --ADC2 --CH1 --duration 2.5       # ADC2 canale 1 (PB1), 2,5 s
+python adc_dynamic_acquisition.py COM5 --ADC_CURRENT --CH5 --duration 30 # canale di corrente remoto 5, 30 s
+```
+
+`--ADC1`/`--ADC2`/`--ADC_CURRENT` e `--CH0`..`--CH7` sono **obbligatori** (a
+differenza di `adc_quality_test.py`, qui non esiste un modo "tutti i canali":
+questa modalità è pensata per guardare un solo segnale nel tempo). `--duration`
+è la durata in secondi, decimali ammessi (es. `2.5`).
+
+La scheda non conta più i campioni in anticipo: acquisisce e trasmette in
+loop finché non è trascorso `--duration` secondi (misurati sulla scheda con
+`HAL_GetTick()`), poi si ferma - vedi `adc_quality_run_dynamic()` in `main.c`.
+Il numero di campioni risultante quindi **non è noto in anticipo** e non è lo
+stesso tra un canale locale e uno di corrente remoto: un canale locale è
+molto più rapido da campionare (una scansione ADC) di un canale di corrente
+remoto (un intero scambio SPI START+POLL...POLL con l'altra scheda per ogni
+campione) - a parità di durata richiesta, aspettati molti meno campioni per
+`--ADC_CURRENT`.
+
+Il file viene salvato in `dynamic_data/` (non in `data/`, per non mischiarlo
+con le acquisizioni di qualifica), con lo stesso schema di nome usato per la
+qualifica ma con la durata al posto della tensione/corrente nominale:
+`ADC<n>_<pin>_<durata>s.csv` (es. `dynamic_data/ADC1_PA3_10s.csv`) oppure
+`CURRENT_CH<c>_<durata>s.csv` (es. `dynamic_data/CURRENT_CH5_2.5s.csv`),
+colonne `sample_index,raw,adc_mV,vin_mV` (locale) o
+`sample_index,raw,adc_mV,current_uA` (corrente) - identiche a quelle della
+qualifica. Viene salvato anche un `dynamic_data/adc_config.json`, come per
+`adc_quality_test.py`.
+
+Wire protocol:
+
+```
+CONFIG_BEGIN / ... / CONFIG_END, SELECT_PROMPT       -- come sopra
+(lo script manda "DYNAMIC,<device>,CH<c>,<duration_ms>", es. "DYNAMIC,ADC1,CH3,10000")
+READY,DYNAMIC,<device>,<pin>,<duration_ms>ms         -- la scheda si blocca qui
+(prepara quello che vuoi catturare, poi lo script manda un qualsiasi dato)
+START,DYNAMIC,<device>,<pin>,<duration_ms>ms
+<index>,<raw>,<adc_mV>,<vin_mV o current_uA>          -- finché non trascorre <duration_ms>
+END,DYNAMIC,<device>,<pin>,<duration_ms>ms,<count>
+ALL_DONE
+```
+
+`<device>` è `ADC1`, `ADC2` o `CURRENT`. `analyze_adc_data.py` **non** legge
+ancora questi file (è pensato per i punti di calibrazione a tensione/corrente
+nota, non per una serie temporale) - se in futuro serve analizzare/plottare
+anche i dati di `dynamic_data/`, è un'estensione separata da chiedere.
 
 ## Canali di corrente remoti (4-20mA, altra scheda)
 

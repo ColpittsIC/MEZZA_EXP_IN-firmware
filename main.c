@@ -287,13 +287,20 @@ static void spi2_report(hal_uart_handle_t *huart);
 #if TEST_ADC_QUALITY
 static void uart5_cmd_arm_receive(hal_uart_handle_t *huart5);
 static void uart5_cmd_wait_for_line(char *out_buf, uint32_t out_buf_size);
+static uint32_t adc_quality_parse_device_ch(const char *buf, uint32_t *out_device, uint32_t *out_ch,
+                                             uint32_t *out_next_idx);
 static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_device, uint32_t *out_ch);
+static uint32_t adc_quality_parse_dynamic_select(const char *sel_buf, uint32_t *out_device, uint32_t *out_ch,
+                                                  uint32_t *out_duration_ms);
+static const adc_quality_channel_t *adc_quality_find_channel(uint32_t device, uint32_t ch);
 static void adc_quality_send_config(hal_uart_handle_t *huart5);
 static uint32_t spi_current_xfer(hal_spi_handle_t *hspi2, const uint8_t *tx_frame);
 static uint32_t adc_current_read_channel(hal_spi_handle_t *hspi2, uint32_t ch, uint32_t *out_raw);
 static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2,
                                     hal_spi_handle_t *hspi2, uint32_t test_all, uint32_t sel_device,
                                     uint32_t sel_ch);
+static void adc_quality_run_dynamic(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2,
+                                     hal_spi_handle_t *hspi2, uint32_t device, uint32_t ch, uint32_t duration_ms);
 #endif /* TEST_ADC_QUALITY */
 
 /**
@@ -363,36 +370,53 @@ int main(void)
     adc_quality_send_config(huart5);
 
     /* Ask the PC which channel(s) to test: "ALL" (default, no CLI selection
-       given), "ADC<n>,CH<c>" for a single local ADC channel, or
-       "CURRENT,CH<c>" for a single remote 4-20mA current-loop channel (read
-       over SPI2 - see adc_current_read_channel()). Invalid/unparseable
-       replies fall back to testing everything, rather than getting stuck. */
+       given), "ADC<n>,CH<c>" for a single local ADC channel, "CURRENT,CH<c>"
+       for a single remote 4-20mA current-loop channel (read over SPI2 - see
+       adc_current_read_channel()), or "DYNAMIC,<device>,CH<c>,<duration_ms>"
+       for a single-channel, duration-bounded acquisition (see
+       adc_quality_run_dynamic()) instead of the fixed-sample-count TEST_1
+       procedure. Invalid/unparseable replies fall back to testing everything,
+       rather than getting stuck. */
     uart_send_string(huart5, "Waiting for channel selection\r\n");
     uart_send_string(huart5, "SELECT_PROMPT\r\n");
 
     char     sel_buf[32];
-    uint32_t sel_device = 0U;
-    uint32_t sel_ch     = 0U;
-    uint32_t test_all   = 1U;
+    uint32_t sel_device  = 0U;
+    uint32_t sel_ch      = 0U;
+    uint32_t test_all    = 1U;
+    uint32_t dynamic_ms  = 0U;
+    uint32_t is_dynamic  = 0U;
 
     uart5_cmd_wait_for_line(sel_buf, sizeof(sel_buf));
-    if (strcmp(sel_buf, "ALL") != 0)
+    if (strcmp(sel_buf, "ALL") == 0)
     {
-      if (adc_quality_parse_select(sel_buf, &sel_device, &sel_ch) != 0U)
-      {
-        test_all = 0U;
-      }
-      else
-      {
-        uart_send_string(huart5, "SELECT_INVALID - running the full test instead\r\n");
-      }
+      /* test_all already defaults to 1U */
+    }
+    else if (adc_quality_parse_dynamic_select(sel_buf, &sel_device, &sel_ch, &dynamic_ms) != 0U)
+    {
+      is_dynamic = 1U;
+    }
+    else if (adc_quality_parse_select(sel_buf, &sel_device, &sel_ch) != 0U)
+    {
+      test_all = 0U;
+    }
+    else
+    {
+      uart_send_string(huart5, "SELECT_INVALID - running the full test instead\r\n");
     }
 
+    if (is_dynamic != 0U)
+    {
+      adc_quality_run_dynamic(huart5, hadc1, hadc2, hspi2, sel_device, sel_ch, dynamic_ms);
+    }
+    else
+    {
 #if (ADC_QUALITY_TEST_ID == 1U)
-    adc_quality_run_test_1(huart5, hadc1, hadc2, hspi2, test_all, sel_device, sel_ch);
+      adc_quality_run_test_1(huart5, hadc1, hadc2, hspi2, test_all, sel_device, sel_ch);
 #else
 #error "Unknown ADC_QUALITY_TEST_ID"
 #endif
+    }
 
     uart_send_string(huart5, "\r\n>>> ADC quality test COMPLETE <<<\r\n");
     while (1)
@@ -969,31 +993,36 @@ static void uart5_cmd_wait_for_line(char *out_buf, uint32_t out_buf_size)
 }
 
 /**
-  * brief:  Parse a channel-selection reply of the exact form "ADC<n>,CH<c>"
-  *         (e.g. "ADC1,CH3", <n> is 1 or 2) or "CURRENT,CH<c>" (e.g.
-  *         "CURRENT,CH5", for one of the other board's 8 remote 4-20mA
-  *         current-loop channels), validating that <c> is in range for the
-  *         selected device (0..7 for ADC1/CURRENT, 0..1 for ADC2).
-  * retval: 1 and *out_device/*out_ch filled if sel_buf parses and validates, 0 otherwise
+  * brief:  Parse the leading "ADC<n>,CH<c>" (e.g. "ADC1,CH3", <n> is 1 or 2)
+  *         or "CURRENT,CH<c>" (e.g. "CURRENT,CH5", for one of the other
+  *         board's 8 remote 4-20mA current-loop channels) portion of buf,
+  *         validating that <c> is in range for the selected device (0..7 for
+  *         ADC1/CURRENT, 0..1 for ADC2). Does NOT require end-of-string after
+  *         the channel digits: *out_next_idx is left pointing at whatever
+  *         follows, so callers can accept either just that (a plain
+  *         adc_quality_parse_select() selection) or more fields after it
+  *         (adc_quality_parse_dynamic_select()'s trailing ",<duration_ms>").
+  * retval: 1 and *out_device/*out_ch/*out_next_idx filled on success, 0 otherwise
   */
-static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_device, uint32_t *out_ch)
+static uint32_t adc_quality_parse_device_ch(const char *buf, uint32_t *out_device, uint32_t *out_ch,
+                                             uint32_t *out_next_idx)
 {
   uint32_t device;
   uint32_t ch;
   uint32_t i;
   uint32_t max_ch;
 
-  if ((sel_buf[0] == 'A') && (sel_buf[1] == 'D') && (sel_buf[2] == 'C') &&
-      (sel_buf[3] >= '1') && (sel_buf[3] <= '2') &&
-      (sel_buf[4] == ',') && (sel_buf[5] == 'C') && (sel_buf[6] == 'H'))
+  if ((buf[0] == 'A') && (buf[1] == 'D') && (buf[2] == 'C') &&
+      (buf[3] >= '1') && (buf[3] <= '2') &&
+      (buf[4] == ',') && (buf[5] == 'C') && (buf[6] == 'H'))
   {
-    device = (sel_buf[3] == '1') ? (uint32_t)ADC_QUALITY_DEVICE_ADC1 : (uint32_t)ADC_QUALITY_DEVICE_ADC2;
-    max_ch = (sel_buf[3] == '1') ? 7U : 1U;
+    device = (buf[3] == '1') ? (uint32_t)ADC_QUALITY_DEVICE_ADC1 : (uint32_t)ADC_QUALITY_DEVICE_ADC2;
+    max_ch = (buf[3] == '1') ? 7U : 1U;
     i = 7U;
   }
-  else if ((sel_buf[0] == 'C') && (sel_buf[1] == 'U') && (sel_buf[2] == 'R') && (sel_buf[3] == 'R') &&
-           (sel_buf[4] == 'E') && (sel_buf[5] == 'N') && (sel_buf[6] == 'T') &&
-           (sel_buf[7] == ',') && (sel_buf[8] == 'C') && (sel_buf[9] == 'H'))
+  else if ((buf[0] == 'C') && (buf[1] == 'U') && (buf[2] == 'R') && (buf[3] == 'R') &&
+           (buf[4] == 'E') && (buf[5] == 'N') && (buf[6] == 'T') &&
+           (buf[7] == ',') && (buf[8] == 'C') && (buf[9] == 'H'))
   {
     device = (uint32_t)ADC_QUALITY_DEVICE_CURRENT;
     max_ch = ADC_CURRENT_CHANNEL_COUNT - 1U;
@@ -1004,19 +1033,15 @@ static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_devi
     return 0U;
   }
 
-  if ((sel_buf[i] < '0') || (sel_buf[i] > '9'))
+  if ((buf[i] < '0') || (buf[i] > '9'))
   {
     return 0U;
   }
   ch = 0U;
-  while ((sel_buf[i] >= '0') && (sel_buf[i] <= '9'))
+  while ((buf[i] >= '0') && (buf[i] <= '9'))
   {
-    ch = (ch * 10U) + (uint32_t)(sel_buf[i] - '0');
+    ch = (ch * 10U) + (uint32_t)(buf[i] - '0');
     i++;
-  }
-  if (sel_buf[i] != '\0')
-  {
-    return 0U; /* trailing garbage after the channel number */
   }
   if (ch > max_ch)
   {
@@ -1025,7 +1050,104 @@ static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_devi
 
   *out_device = device;
   *out_ch = ch;
+  *out_next_idx = i;
   return 1U;
+}
+
+/**
+  * brief:  Parse a channel-selection reply of the exact form "ADC<n>,CH<c>"
+  *         or "CURRENT,CH<c>" - see adc_quality_parse_device_ch() - with
+  *         nothing else allowed to follow the channel number.
+  * retval: 1 and *out_device/*out_ch filled if sel_buf parses and validates, 0 otherwise
+  */
+static uint32_t adc_quality_parse_select(const char *sel_buf, uint32_t *out_device, uint32_t *out_ch)
+{
+  uint32_t next_idx;
+
+  if (adc_quality_parse_device_ch(sel_buf, out_device, out_ch, &next_idx) == 0U)
+  {
+    return 0U;
+  }
+  if (sel_buf[next_idx] != '\0')
+  {
+    return 0U; /* trailing garbage after the channel number */
+  }
+  return 1U;
+}
+
+/**
+  * brief:  Parse a dynamic (duration-based, single-channel) selection reply
+  *         of the exact form "DYNAMIC,ADC<n>,CH<c>,<duration_ms>" or
+  *         "DYNAMIC,CURRENT,CH<c>,<duration_ms>" - see
+  *         adc_quality_run_dynamic(). <duration_ms> must be a non-zero
+  *         decimal integer with no leading '+'/'-'.
+  * retval: 1 and *out_device/*out_ch/*out_duration_ms filled on success, 0 otherwise
+  */
+static uint32_t adc_quality_parse_dynamic_select(const char *sel_buf, uint32_t *out_device, uint32_t *out_ch,
+                                                  uint32_t *out_duration_ms)
+{
+  uint32_t next_idx;
+  uint32_t duration_ms;
+
+  if ((sel_buf[0] != 'D') || (sel_buf[1] != 'Y') || (sel_buf[2] != 'N') || (sel_buf[3] != 'A') ||
+      (sel_buf[4] != 'M') || (sel_buf[5] != 'I') || (sel_buf[6] != 'C') || (sel_buf[7] != ','))
+  {
+    return 0U;
+  }
+
+  if (adc_quality_parse_device_ch(&sel_buf[8], out_device, out_ch, &next_idx) == 0U)
+  {
+    return 0U;
+  }
+  next_idx += 8U; /* next_idx was relative to &sel_buf[8] */
+
+  if (sel_buf[next_idx] != ',')
+  {
+    return 0U;
+  }
+  next_idx++;
+
+  if ((sel_buf[next_idx] < '0') || (sel_buf[next_idx] > '9'))
+  {
+    return 0U;
+  }
+  duration_ms = 0U;
+  while ((sel_buf[next_idx] >= '0') && (sel_buf[next_idx] <= '9'))
+  {
+    duration_ms = (duration_ms * 10U) + (uint32_t)(sel_buf[next_idx] - '0');
+    next_idx++;
+  }
+  if ((sel_buf[next_idx] != '\0') || (duration_ms == 0U))
+  {
+    return 0U;
+  }
+
+  *out_duration_ms = duration_ms;
+  return 1U;
+}
+
+/**
+  * brief:  Find the adc_quality_channels[] entry for a local ADC1/ADC2
+  *         (device, ch) pair - device/ch are assumed already validated by
+  *         adc_quality_parse_device_ch() (range-checked against that
+  *         device), so a NULL return here would indicate a logic error
+  *         upstream, not a bad user input.
+  * retval: pointer to the matching entry, or NULL if none matches
+  */
+static const adc_quality_channel_t *adc_quality_find_channel(uint32_t device, uint32_t ch)
+{
+  uint32_t i;
+  uint32_t adc_number = (device == (uint32_t)ADC_QUALITY_DEVICE_ADC1) ? 1U : 2U;
+
+  for (i = 0U; i < ADC_QUALITY_CHANNEL_COUNT; i++)
+  {
+    if ((adc_quality_channels[i].adc_number == adc_number) &&
+        ((uint32_t)adc_quality_channels[i].channel_idx == ch))
+    {
+      return &adc_quality_channels[i];
+    }
+  }
+  return NULL;
 }
 
 /**
@@ -1384,6 +1506,114 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
       (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
     }
   }
+
+  (void)HAL_UART_Transmit(huart5, "ALL_DONE\r\n", 10U, UART_TX_TIMEOUT_MS);
+}
+
+/**
+  * brief:  DYNAMIC: single-channel acquisition bounded by wall-clock time
+  *         (duration_ms, measured with HAL_GetTick()) instead of a fixed
+  *         sample count - unlike adc_quality_run_test_1(), the number of
+  *         samples produced depends on how fast this channel can be
+  *         acquired+transmitted, which varies a lot between a local ADC
+  *         channel and a remote current-loop channel (SPI request/poll
+  *         round-trip). "device"/"ch" select the channel exactly as for
+  *         adc_quality_run_test_1() (see adc_quality_device_t). Wire protocol:
+  *           READY,DYNAMIC,ADC<n>,<pin>,<duration_ms>ms        -- or CURRENT,CH<c>,...
+  *           (operator gets ready, then the PC script sends anything)
+  *           START,DYNAMIC,ADC<n>,<pin>,<duration_ms>ms
+  *           <index>,<raw>,<adc_mV>,<vin_mV or current_uA>      -- until duration_ms elapses
+  *           END,DYNAMIC,ADC<n>,<pin>,<duration_ms>ms,<count>
+  *           ALL_DONE
+  * retval: none
+  */
+static void adc_quality_run_dynamic(hal_uart_handle_t *huart5, hal_adc_handle_t *hadc1, hal_adc_handle_t *hadc2,
+                                     hal_spi_handle_t *hspi2, uint32_t device, uint32_t ch, uint32_t duration_ms)
+{
+  char              line[64];
+  int               len;
+  char              go_buf[8];
+  char              pin_buf[8];
+  uint32_t          sample;
+  uint32_t          start_tick;
+  const char       *device_label;
+  const char       *pin_label;
+  hal_adc_handle_t *hadc = NULL;
+  uint8_t           nb_channels_in_seq = 0U;
+  uint32_t          local_ch_idx = 0U;
+
+  if (device == (uint32_t)ADC_QUALITY_DEVICE_CURRENT)
+  {
+    device_label = "CURRENT";
+    (void)snprintf(pin_buf, sizeof(pin_buf), "CH%lu", (unsigned long)ch);
+    pin_label = pin_buf;
+  }
+  else
+  {
+    const adc_quality_channel_t *p_ch = adc_quality_find_channel(device, ch);
+
+    device_label = (p_ch->adc_number == 1U) ? "ADC1" : "ADC2";
+    pin_label = p_ch->pin_label;
+    hadc = (p_ch->adc_number == 1U) ? hadc1 : hadc2;
+    nb_channels_in_seq = (p_ch->adc_number == 1U) ? ADC1_NB_CHANNELS : ADC2_NB_CHANNELS;
+    local_ch_idx = (uint32_t)p_ch->channel_idx;
+  }
+
+  len = snprintf(line, sizeof(line), "READY,DYNAMIC,%s,%s,%lums\r\n",
+                  device_label, pin_label, (unsigned long)duration_ms);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  /* Operator gets ready (e.g. to trigger whatever external event they want
+     to capture), then confirms from the PC script; content is irrelevant
+     here, only its arrival matters. */
+  uart5_cmd_wait_for_line(go_buf, sizeof(go_buf));
+
+  len = snprintf(line, sizeof(line), "START,DYNAMIC,%s,%s,%lums\r\n",
+                  device_label, pin_label, (unsigned long)duration_ms);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+
+  sample = 0U;
+  start_tick = HAL_GetTick();
+  while ((HAL_GetTick() - start_tick) < duration_ms)
+  {
+    if (device == (uint32_t)ADC_QUALITY_DEVICE_CURRENT)
+    {
+      uint32_t raw;
+      int32_t  adc_mv;
+      int32_t  current_ua;
+
+      if (adc_current_read_channel(hspi2, ch, &raw) == 0U)
+      {
+        adc_test_error(huart5, "ADC dynamic acquisition: remote current channel read failed");
+      }
+
+      adc_mv = HAL_ADC_CALC_DATA_TO_VOLTAGE(ADC_VREF_MV, raw, HAL_ADC_RESOLUTION_12_BIT);
+      /* current_uA = V_mV * 1000 / R_ohm (Ohm's law, scaled to stay in integers) */
+      current_ua = (int32_t)(((int64_t)adc_mv * 1000) / (int64_t)ADC_CURRENT_SHUNT_OHM);
+
+      len = snprintf(line, sizeof(line), "%lu,%ld,%ld,%ld\r\n",
+                      (unsigned long)sample, (long)raw, (long)adc_mv, (long)current_ua);
+    }
+    else
+    {
+      if (adc_read_group(huart5, device_label, hadc, nb_channels_in_seq, adc_results) == 0U)
+      {
+        adc_test_error(huart5, "ADC dynamic acquisition: conversion failed");
+      }
+
+      len = snprintf(line, sizeof(line), "%lu,%ld,%ld,%ld\r\n",
+                      (unsigned long)sample,
+                      (long)adc_results[local_ch_idx].raw,
+                      (long)adc_results[local_ch_idx].adc_mv,
+                      (long)adc_results[local_ch_idx].input_mv);
+    }
+    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+    sample++;
+  }
+
+  len = snprintf(line, sizeof(line), "END,DYNAMIC,%s,%s,%lums,%lu\r\n",
+                  device_label, pin_label, (unsigned long)duration_ms, (unsigned long)sample);
+  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   (void)HAL_UART_Transmit(huart5, "ALL_DONE\r\n", 10U, UART_TX_TIMEOUT_MS);
 }

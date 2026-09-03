@@ -10,4 +10,5 @@ Thumbs.db
 
 # ADC quality test captured data (per-run, not source)
 adc_quality_test/data/
+adc_quality_test/dynamic_data/
 __pycache__/

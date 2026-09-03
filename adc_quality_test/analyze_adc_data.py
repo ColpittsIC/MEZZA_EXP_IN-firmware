@@ -240,6 +240,37 @@ def print_and_save_tables(points_df: pd.DataFrame, channels_df: pd.DataFrame, ou
     print(f"Salvati: {outdir / 'summary_per_channel.csv'}")
 
 
+def _make_comparison_plot(plt, channels: list[dict], title: str, out_path: Path, show: bool) -> None:
+    """Gain error / offset / noise bar chart across a set of channels that
+    all share the same value_unit (voltage-in-mV or current-in-uA) - see
+    make_plots(). Does nothing if the list is empty (e.g. no current-loop
+    data acquired yet)."""
+    if not channels:
+        return
+
+    unit = channels[0]["value_unit"]
+    labels = [f"{ch['device']}\n{ch['pin']}" for ch in channels]
+    fig, axes = plt.subplots(3, 1, figsize=(8, 9), sharex=True)
+
+    axes[0].bar(labels, [ch["gain_error_pct"] for ch in channels])
+    axes[0].set_ylabel("Errore di guadagno (%)")
+    axes[0].grid(True, axis="y", alpha=0.3)
+
+    axes[1].bar(labels, [ch["offset"] for ch in channels], color="tab:orange")
+    axes[1].set_ylabel(f"Offset ({unit})")
+    axes[1].grid(True, axis="y", alpha=0.3)
+
+    axes[2].bar(labels, [ch["avg_noise_std"] for ch in channels], color="tab:green")
+    axes[2].set_ylabel(f"Rumore medio - std ({unit})")
+    axes[2].grid(True, axis="y", alpha=0.3)
+
+    fig.suptitle(title)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    if not show:
+        plt.close(fig)
+
+
 def make_plots(channels: list[dict], outdir: Path, show: bool) -> None:
     try:
         import matplotlib.pyplot as plt
@@ -277,29 +308,16 @@ def make_plots(channels: list[dict], outdir: Path, show: bool) -> None:
         if not show:
             plt.close(fig)
 
-    # Cross-channel comparison bar charts (offset/noise units differ between
-    # voltage channels (mV) and current channels (uA); the axis label lists
-    # both since a single run may mix the two kinds).
-    labels = [f"{ch['device']}\n{ch['pin']}" for ch in channels]
-    fig, axes = plt.subplots(3, 1, figsize=(8, 9), sharex=True)
+    # Cross-channel comparison bar charts: voltage and current channels use
+    # different units (mV vs uA) and typically different counts (10 vs 8), so
+    # each kind gets its own figure rather than mixing them in one chart.
+    voltage_channels = [ch for ch in channels if ch["device"] != "CURRENT"]
+    current_channels = [ch for ch in channels if ch["device"] == "CURRENT"]
 
-    axes[0].bar(labels, [ch["gain_error_pct"] for ch in channels])
-    axes[0].set_ylabel("Errore di guadagno (%)")
-    axes[0].grid(True, axis="y", alpha=0.3)
-
-    axes[1].bar(labels, [ch["offset"] for ch in channels], color="tab:orange")
-    axes[1].set_ylabel("Offset (mV o uA)")
-    axes[1].grid(True, axis="y", alpha=0.3)
-
-    axes[2].bar(labels, [ch["avg_noise_std"] for ch in channels], color="tab:green")
-    axes[2].set_ylabel("Rumore medio - std (mV o uA)")
-    axes[2].grid(True, axis="y", alpha=0.3)
-
-    fig.suptitle("Confronto tra tutti i canali")
-    fig.tight_layout()
-    fig.savefig(outdir / "all_channels_comparison.png", dpi=150)
-    if not show:
-        plt.close(fig)
+    _make_comparison_plot(plt, voltage_channels, "Confronto tra i canali di tensione",
+                           outdir / "all_channels_comparison_voltage.png", show)
+    _make_comparison_plot(plt, current_channels, "Confronto tra i canali di corrente",
+                           outdir / "all_channels_comparison_current.png", show)
 
     print(f"\nGrafici salvati in: {outdir}")
 
