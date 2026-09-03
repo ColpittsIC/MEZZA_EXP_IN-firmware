@@ -241,8 +241,18 @@ ALL_DONE
 
 `<device>` è `ADC1`, `ADC2` o `CURRENT`. `analyze_adc_data.py` **non** legge
 ancora questi file (è pensato per i punti di calibrazione a tensione/corrente
-nota, non per una serie temporale) - se in futuro serve analizzare/plottare
-anche i dati di `dynamic_data/`, è un'estensione separata da chiedere.
+nota, non per una serie temporale) - se in futuro serve analizzare anche i
+dati di `dynamic_data/` con quello script, è un'estensione separata da
+chiedere.
+
+Al termine di ogni acquisizione, `adc_dynamic_acquisition.py` salva **in
+automatico** anche un grafico PNG accanto al CSV (stesso nome, estensione
+`.png`) - due pannelli, valore misurato (`vin_mV` o `current_uA`) e codice
+raw nel tempo. L'asse del tempo è solo una stima (assume campionamento
+uniforme sulla durata richiesta - la scheda non timestampa ogni singolo
+campione), utile per un'occhiata rapida ma non come base dei tempi precisa.
+Passa `--no-plot` per saltarlo (es. matplotlib non disponibile, o
+acquisizioni lunghe/non presidiate dove non serve).
 
 ## Canali di corrente remoti (4-20mA, altra scheda)
 

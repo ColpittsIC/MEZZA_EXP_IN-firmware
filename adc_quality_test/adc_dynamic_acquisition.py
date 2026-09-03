@@ -35,6 +35,14 @@ Saves the CSV to "dynamic_data/ADC<n>_<pin>_<duration>s.csv" (local channel)
 or "dynamic_data/CURRENT_CH<c>_<duration>s.csv" (remote current-loop channel) -
 same naming as adc_quality_test.py's calibration files, but with the
 acquisition duration where that script has a nominal voltage/current.
+
+Once the acquisition finishes, also saves a PNG plot right next to the CSV
+(same name, ".png") - the measured value (vin_mV or current_uA) and the raw
+ADC code over time. Pass --no-plot to skip this (e.g. no matplotlib
+available, or plotting many long runs unattended). The time axis is only an
+approximation (samples are assumed evenly spaced over the requested
+duration - actual per-sample spacing is not otherwise reported by the
+board), fine for a quick look but not a precise timebase.
 """
 
 import argparse
@@ -60,6 +68,8 @@ def parse_args():
                          help=f"Folder where the CSV file is saved (default: {DEFAULT_OUTDIR})")
     parser.add_argument("--duration", type=float, required=True,
                          help="Durata dell'acquisizione in secondi (accetta decimali, es. 2.5)")
+    parser.add_argument("--no-plot", action="store_true",
+                         help="Non generare il grafico PNG al termine dell'acquisizione")
 
     device_group = parser.add_mutually_exclusive_group(required=True)
     device_group.add_argument("--ADC1", action="store_true", help="Canale ADC1 locale (richiede --CH0..--CH7)")
@@ -140,13 +150,54 @@ def handle_ready(ser: serial.Serial, fields: list[str]) -> None:
     ser.write(b"GO\r\n")
 
 
-def handle_start(ser: serial.Serial, fields: list[str], outdir: Path, duration_label: str) -> int:
+def make_plot(csv_path: Path, device: str, pin: str, duration_label: str, duration_s: float,
+              raws: list[int], values: list[int], value_col: str, value_unit: str) -> None:
+    """Save a PNG (same name as csv_path, ".png") with the measured value and
+    the raw ADC code over time, right after an acquisition completes. The
+    time axis assumes samples are evenly spaced over duration_s - the board
+    only reports the requested duration and doesn't timestamp each sample -
+    so this is a quick-look plot, not a precise timebase."""
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("\n(matplotlib non installato: salto il grafico. `pip install matplotlib` per averlo.)")
+        return
+
+    if not raws:
+        print("\n(nessun campione acquisito: salto il grafico.)")
+        return
+
+    count = len(raws)
+    time_s = [i * duration_s / count for i in range(count)]
+
+    fig, (ax_val, ax_raw) = plt.subplots(2, 1, figsize=(9, 6), sharex=True)
+
+    ax_val.plot(time_s, values, linewidth=0.8)
+    ax_val.set_ylabel(f"{value_col} ({value_unit})")
+    ax_val.set_title(f"{device} {pin} - acquisizione dinamica ({duration_label}, {count} campioni)")
+    ax_val.grid(True, alpha=0.3)
+
+    ax_raw.plot(time_s, raws, linewidth=0.8, color="tab:orange")
+    ax_raw.set_ylabel("raw (codice ADC)")
+    ax_raw.set_xlabel("Tempo (s, stimato assumendo campionamento uniforme)")
+    ax_raw.grid(True, alpha=0.3)
+
+    fig.tight_layout()
+    png_path = csv_path.with_suffix(".png")
+    fig.savefig(png_path, dpi=150)
+    plt.close(fig)
+    print(f"Grafico salvato in: {png_path}")
+
+
+def handle_start(ser: serial.Serial, fields: list[str], outdir: Path, duration_label: str,
+                  duration_s: float, enable_plot: bool) -> int:
     """fields = ["START", "DYNAMIC", "<device>", "<pin>", "<duration_ms>ms"].
     Unlike adc_quality_test.py's handle_start(), the sample count is NOT known
     ahead of time - this reads lines until "END,DYNAMIC,..." arrives, however
     many that turns out to be. Returns the number of samples received."""
     device, pin = fields[2], fields[3]
     is_current = device == "CURRENT"
+    value_col = "current_uA" if is_current else "vin_mV"
 
     outdir.mkdir(parents=True, exist_ok=True)
     filename = outdir / f"{device}_{pin}_{duration_label}.csv"
@@ -154,10 +205,11 @@ def handle_start(ser: serial.Serial, fields: list[str], outdir: Path, duration_l
     print(f"Acquisizione in corso ({duration_label}) -> {filename.name} ...", end="", flush=True)
     t_start = time.monotonic()
 
-    received = 0
+    raws: list[int] = []
+    values: list[int] = []
     with open(filename, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["sample_index", "raw", "adc_mV", "current_uA" if is_current else "vin_mV"])
+        writer.writerow(["sample_index", "raw", "adc_mV", value_col])
 
         while True:
             line = read_line(ser)
@@ -170,12 +222,19 @@ def handle_start(ser: serial.Serial, fields: list[str], outdir: Path, duration_l
                 print(f"\n  Riga inattesa ignorata: {line!r}")
                 continue
             writer.writerow(parts)
-            received += 1
-            if received % 1000 == 0:
+            raws.append(int(parts[1]))
+            values.append(int(parts[3]))
+            if len(raws) % 1000 == 0:
                 print(".", end="", flush=True)
 
     elapsed = time.monotonic() - t_start
+    received = len(raws)
     print(f" fatto ({received} campioni, {elapsed:.1f} s).")
+
+    if enable_plot:
+        make_plot(filename, device, pin, duration_label, duration_s, raws, values, value_col,
+                   "uA" if is_current else "mV")
+
     return received
 
 
@@ -205,7 +264,7 @@ def main() -> int:
             if fields[0] == "READY" and len(fields) >= 2 and fields[1] == "DYNAMIC":
                 handle_ready(ser, fields)
             elif fields[0] == "START" and len(fields) >= 2 and fields[1] == "DYNAMIC":
-                handle_start(ser, fields, args.outdir, args.duration_label)
+                handle_start(ser, fields, args.outdir, args.duration_label, args.duration, not args.no_plot)
             elif fields[0] == "ALL_DONE":
                 print("\n*** Acquisizione completata. ***")
                 return 0
