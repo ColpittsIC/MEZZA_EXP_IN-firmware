@@ -116,6 +116,63 @@ Poi, in loop continuo (1 iterazione al secondo):
 
 In caso di errore su un passo di inizializzazione o di conversione ADC, il firmware stampa un messaggio diagnostico su UART (con indicazione del canale/rank e del codice di stato HAL) e si ferma.
 
+## Script Python (modalità `TEST_ADC_QUALITY`)
+
+Nella cartella [`adc_quality_test/`](adc_quality_test/) ci sono tre script Python che parlano con la scheda via UART5 quando è flashata con `TEST_ADC_QUALITY = 1`. Installa le dipendenze una volta (da dentro quella cartella):
+
+```
+pip install -r requirements.txt
+```
+
+| Script | Cosa fa | Dove serve la scheda collegata? |
+|---|---|---|
+| `adc_quality_test.py` | Procedura di qualifica completa: tutti i 10 canali locali + gli 8 canali di corrente remoti, ciascuno su più punti nominali (tensioni/correnti fisse), 10000 campioni per punto. | Sì |
+| `adc_dynamic_acquisition.py` | Acquisizione di **un solo canale per una durata a scelta** (secondi, anche decimali), invece di punti nominali fissi - pensata per guardare un segnale nel tempo. | Sì |
+| `analyze_adc_data.py` | Analisi offline dei CSV prodotti da `adc_quality_test.py` (fit lineare guadagno/offset, rumore, grafici). **Non legge** i file prodotti da `adc_dynamic_acquisition.py`. | No (lavora sui CSV già salvati) |
+
+Le note complete su protocollo, formato dei CSV e dettagli di ciascuno sono in [`adc_quality_test/README.md`](adc_quality_test/README.md); qui sotto solo un riepilogo dei comandi e - soprattutto - **quali flag valgono per quale script**, perché `adc_quality_test.py` e `adc_dynamic_acquisition.py` condividono gli stessi flag di selezione canale ma con regole diverse.
+
+### `adc_quality_test.py` - qualifica completa
+
+```
+python adc_quality_test.py COM5                       # tutto: 10 canali locali + 8 remoti in corrente
+python adc_quality_test.py COM5 --ADC1 --CH3           # solo ADC1 canale 3 (PA3)
+python adc_quality_test.py COM5 --ADC2 --CH1           # solo ADC2 canale 1 (PB1)
+python adc_quality_test.py COM5 --ADC_CURRENT --CH5    # solo canale di corrente remoto 5
+```
+
+- `--ADC1` / `--ADC2` / `--ADC_CURRENT` e `--CH0`..`--CH7` sono **opzionali**: se li ometti entrambi, testa tutto. Se usi uno dei tre, devi passare anche un `--CHn` (e viceversa).
+- `--ADC2` accetta solo `--CH0` o `--CH1` (ha solo quei due canali collegati); `--ADC1` e `--ADC_CURRENT` accettano `--CH0`..`--CH7`.
+- Salva in `data/` (default; cambiabile con `--outdir`).
+
+### `adc_dynamic_acquisition.py` - un canale, durata a scelta
+
+```
+python adc_dynamic_acquisition.py COM5 --ADC1 --CH3 --duration 10          # ADC1 canale 3 (PA3), 10 s
+python adc_dynamic_acquisition.py COM5 --ADC2 --CH1 --duration 2.5         # ADC2 canale 1 (PB1), 2,5 s
+python adc_dynamic_acquisition.py COM5 --ADC_CURRENT --CH5 --duration 30   # canale di corrente remoto 5, 30 s
+python adc_dynamic_acquisition.py COM5 --ADC1 --CH3 --duration 10 --no-plot  # come sopra, senza generare il PNG
+```
+
+- A differenza di `adc_quality_test.py`, qui `--ADC1`/`--ADC2`/`--ADC_CURRENT` **e** `--CH0`..`--CH7` sono **obbligatori** - non esiste un "tutti i canali", questo script guarda sempre un solo segnale.
+- `--duration` (secondi, decimali ammessi) è **obbligatorio**.
+- `--ADC2` accetta solo `--CH0`/`--CH1`, come sopra.
+- Genera in automatico anche un grafico PNG del segnale acquisito - passa `--no-plot` per saltarlo.
+- Salva in `dynamic_data/` (default; cambiabile con `--outdir`), **non** in `data/`.
+
+### `analyze_adc_data.py` - analisi offline
+
+```
+python analyze_adc_data.py               # apre un selettore di cartella
+python analyze_adc_data.py data          # analizza data/ (l'output di adc_quality_test.py)
+python analyze_adc_data.py data --plot   # + grafici PNG
+python analyze_adc_data.py data --plot --show   # + li mostra anche a schermo
+```
+
+- Prende come argomento posizionale la **cartella** con i CSV (tipicamente `data/`, non `dynamic_data/` - vedi sopra).
+- `--plot` genera i grafici PNG in `<cartella>/analysis/`; `--show` li mostra anche a schermo, ma **ha effetto solo insieme a `--plot`**.
+- Nessun flag di selezione canale: analizza sempre tutti i CSV trovati nella cartella indicata.
+
 ## Struttura del progetto
 
 Progetto generato con STM32CubeMX (nuovo modello di generazione basato su CMake), poi esteso a mano per aggiungere i due test:
