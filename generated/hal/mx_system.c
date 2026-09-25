@@ -128,6 +128,15 @@ system_status_t mx_system_init(void)
     return SYSTEM_PERIPHERAL_ERROR;
   }
 
+  /* USB (PCD, device mode - CDC Virtual COM Port): only configures the
+    peripheral (clock, endpoints, NVIC), does not start it / make it visible
+    on the bus - see usb_cdc_start(), called from main.c only when
+    PC_COMM_USE_USB actually selects USB over UART5. */
+  if (mx_usb_init() == NULL)
+  {
+    return SYSTEM_PERIPHERAL_ERROR;
+  }
+
   if (post_system_init_hook() != SYSTEM_OK)
   {
     return SYSTEM_POSTSYSTEM_ERROR;

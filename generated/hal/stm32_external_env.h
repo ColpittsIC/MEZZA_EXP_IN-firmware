@@ -39,6 +39,19 @@ extern "C" {
 /* Tip: To avoid modifying this file each time you need to use different HSE,
    ===  you can define the HSE value in your toolchain compiler preprocessor. */
 
+/**
+  * @brief HSE Value: external crystal on PH0(OSC_IN)/PH1(OSC_OUT), used as the
+  *        USB Full-Speed CK48 reference (see mx_rcc.c) - not needed for the
+  *        main HSI-based SYSCLK, which stays as configured in mx_rcc.c.
+  */
+#if !defined (HSE_VALUE)
+#define HSE_VALUE               48000000UL /*!< Value of the External oscillator in Hz */
+#endif /* HSE_VALUE */
+
+#if !defined (HSE_STARTUP_TIMEOUT)
+#define HSE_STARTUP_TIMEOUT     100UL      /*!< Time out for HSE start up, in ms */
+#endif /* HSE_STARTUP_TIMEOUT */
+
 #ifdef __cplusplus
 }
 #endif

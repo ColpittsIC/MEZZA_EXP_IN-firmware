@@ -21,16 +21,27 @@ In `main.c`, imposta:
 
 Poi ricompila e flasha normalmente (vedi il README principale del progetto).
 In questa modalità il firmware **non** avvia LED/USART3/SPI2 - resta
-concentrato sulla UART5 e sul test ADC.
+concentrato sul link verso il PC e sul test ADC.
 
 > Ricordati di rimettere `TEST_ADC_QUALITY` a `0` quando vuoi tornare al
 > firmware demo normale.
+
+Il link verso il PC usato da tutta questa procedura (`READY`/`START`/...) è
+UART5 oppure USB, a seconda del flag `PC_COMM_USE_USB` (vedi il README
+principale, sezione "USB (Virtual COM Port)") - **indipendente** da
+`TEST_ADC_QUALITY`. Con `PC_COMM_USE_USB = 1` collega la scheda al PC con un
+cavo USB invece dell'adattatore USB-seriale: gli script sotto funzionano
+identici, basta passare alla riga di comando il nome della porta COM
+assegnata alla scheda invece di quella dell'adattatore (il valore di
+`--baud` passato allo script non ha alcun effetto su questo collegamento,
+la USB non ha un vero baud rate - lascialo pure al default).
 
 ## 2. Collegamenti
 
 - UART5 di debug (PB5/PB6) collegata al PC via adattatore USB-seriale, come già
   fai per leggere i log — ora però la userai anche per mandare comandi alla
-  scheda (la UART è già full-duplex).
+  scheda (la UART è già full-duplex). **Oppure**, con `PC_COMM_USE_USB = 1`, un
+  cavo USB direttamente al connettore della scheda (PA11/PA12) - vedi sopra.
 - Uscita dell'alimentatore collegata al pin ADC indicato dal messaggio
   `READY` corrente (uno alla volta).
 

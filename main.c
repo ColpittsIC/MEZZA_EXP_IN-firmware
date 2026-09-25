@@ -16,6 +16,8 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "mx_usb.h"
+#include "usb_cdc.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -28,7 +30,23 @@
    1 = run the ADC quality-test procedure selected by ADC_QUALITY_TEST_ID
        instead: the other tests (LED, USART3, SPI2) are not started, and
        main() never returns to the normal loop. */
-#define TEST_ADC_QUALITY         1U
+#define TEST_ADC_QUALITY         0U
+
+/* Which link this board uses to talk to the PC (both in the normal demo loop
+   and in TEST_ADC_QUALITY mode - independent of that flag, and independent
+   of USART3/SPI2, which always talk to the OTHER board regardless):
+     0 = UART5 (PB5/PB6), as before.
+     1 = USB CDC Virtual COM Port (PA11=D-, PA12=D+, dedicated pins - no GPIO
+         AF configuration needed). Requires a 48 MHz HSE crystal on PH0/PH1
+         (see mx_rcc.c) - this board's is exact, so CK48 is sourced directly
+         from HSE, no PLL/division needed.
+   All the UART5 code stays in place either way (see pc_transmit() and
+   uart5_cmd_arm_receive()/uart5_cmd_wait_for_line() below): this flag only
+   changes which one main() actually drives. UART5 itself is still
+   initialized regardless (mx_system.c always calls mx_uart5_uart_init(),
+   like every other peripheral in this project) - it is simply left idle
+   when PC_COMM_USE_USB selects USB instead. */
+#define PC_COMM_USE_USB          1U
 
 /* Which ADC quality-test procedure to run when TEST_ADC_QUALITY == 1.
    Only TEST_1 exists today; the value/dispatch is kept so more can be added
@@ -264,6 +282,8 @@ static const adc_quality_channel_t adc_quality_channels[] =
 #endif /* TEST_ADC_QUALITY */
 
 /* Private functions prototype -----------------------------------------------*/
+static hal_status_t pc_transmit(hal_uart_handle_t *huart, const void *p_data, uint32_t size_byte,
+                                 uint32_t timeout_ms);
 static void uart_send_string(hal_uart_handle_t *huart, const char *p_str);
 static void adc_test_error(hal_uart_handle_t *huart, const char *p_reason);
 static const char *hal_status_to_str(hal_status_t status);
@@ -331,10 +351,24 @@ int main(void)
     hal_uart_handle_t *husart3 = mx_usart3_uart_gethandle();
 #endif /* !TEST_ADC_QUALITY */
 
+#if PC_COMM_USE_USB
+    /* Makes the CDC Virtual COM Port actually appear on the bus (D+ pull-up) -
+       mx_usb_init() (called unconditionally from mx_system.c, like every
+       other peripheral in this project) only configures the USB peripheral
+       itself, it does not start it. Everything below still goes through
+       huart5-shaped calls (uart_send_string()/pc_transmit()/...): they just
+       forward to USB instead of UART5 - see PC_COMM_USE_USB above. */
+    usb_cdc_start(mx_usb_gethandle());
+#endif /* PC_COMM_USE_USB */
+
     /* Diagnostic message sent as early as possible: if this never shows up on the
-       terminal, the issue is on the UART link itself (wiring, baud rate, ground),
-       not in the ADC part of the test below. */
-    uart_send_string(huart5, "\r\n>>> MEZZA_EXP_IN boot OK - UART5 alive <<<\r\n");
+       terminal, the issue is on the PC link itself (wiring/baud/ground for UART5,
+       or the cable/enumeration for USB - see PC_COMM_USE_USB), not in the ADC
+       part of the test below. In USB mode this specific message can be lost if
+       it is sent before the host finishes enumerating the device (a few tens of
+       milliseconds after power-up/plug-in) - see usb_cdc_transmit()'s docstring;
+       everything sent later (once a terminal/script has the port open) is fine. */
+    uart_send_string(huart5, "\r\n>>> MEZZA_EXP_IN boot OK - PC link alive <<<\r\n");
 
     /* Activate then calibrate both ADC instances (done once at startup) */
     if (HAL_ADC_Start(hadc1) != HAL_OK)
@@ -486,12 +520,34 @@ int main(void)
 } /* end main */
 
 /**
+  * brief:  Blocking transmit over whichever link this board uses to talk to
+  *         the PC (see PC_COMM_USE_USB) - a drop-in signature match for
+  *         HAL_UART_Transmit(), so every call site below needs no change
+  *         beyond the function name. huart/timeout_ms are unused in USB mode
+  *         (usb_cdc_transmit() has no separate handle or timeout of its own -
+  *         see its docstring).
+  * retval: HAL_OK always in USB mode, otherwise whatever HAL_UART_Transmit() returns
+  */
+static hal_status_t pc_transmit(hal_uart_handle_t *huart, const void *p_data, uint32_t size_byte,
+                                 uint32_t timeout_ms)
+{
+#if PC_COMM_USE_USB
+  (void)huart;
+  (void)timeout_ms;
+  usb_cdc_transmit((const uint8_t *)p_data, size_byte);
+  return HAL_OK;
+#else
+  return HAL_UART_Transmit(huart, p_data, size_byte, timeout_ms);
+#endif /* PC_COMM_USE_USB */
+}
+
+/**
   * brief:  Send a NUL-terminated string over UART, blocking.
   * retval: none
   */
 static void uart_send_string(hal_uart_handle_t *huart, const char *p_str)
 {
-  (void)HAL_UART_Transmit(huart, p_str, (uint32_t)strlen(p_str), UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart, p_str, (uint32_t)strlen(p_str), UART_TX_TIMEOUT_MS);
 }
 
 /**
@@ -502,7 +558,7 @@ static void adc_test_error(hal_uart_handle_t *huart, const char *p_reason)
 {
   char line[64];
   int  len = snprintf(line, sizeof(line), "\r\n!!! FATAL: %s !!!\r\n", p_reason);
-  (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   while (1)
   {
@@ -548,7 +604,7 @@ static uint32_t adc_read_group(hal_uart_handle_t *huart, const char *p_adc_name,
       char line[80];
       int  len = snprintf(line, sizeof(line), "%s rank %u: trigger failed (%s)\r\n",
                            p_adc_name, (unsigned int)(idx + 1U), hal_status_to_str(trig_status));
-      (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      (void)pc_transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
       return 0U;
     }
 
@@ -559,7 +615,7 @@ static uint32_t adc_read_group(hal_uart_handle_t *huart, const char *p_adc_name,
       char line[80];
       int  len = snprintf(line, sizeof(line), "%s rank %u: poll failed (%s)\r\n",
                            p_adc_name, (unsigned int)(idx + 1U), hal_status_to_str(poll_status));
-      (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      (void)pc_transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
       return 0U;
     }
 
@@ -587,7 +643,7 @@ static void adc_send_results_uart(hal_uart_handle_t *huart)
   uint32_t idx;
 
   len = snprintf(line, sizeof(line), "\r\n--- ADC test (10 channels) ---\r\n");
-  (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   for (idx = 0U; idx < ADC_TOTAL_CHANNELS; idx++)
   {
@@ -601,7 +657,7 @@ static void adc_send_results_uart(hal_uart_handle_t *huart)
                    (long)adc_results[idx].adc_mv,
                    (long)input_int,
                    (long)input_dec);
-    (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+    (void)pc_transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
   }
 }
 
@@ -682,7 +738,7 @@ static void led_charlie_report_step(hal_uart_handle_t *huart, uint32_t step, con
                       "LED test %2u/%u: %-5s ON  (%s=HIGH  %s=LOW  others Hi-Z)  USART3: %s\r\n",
                       (unsigned int)(step + 1U), (unsigned int)LED_COUNT, leds[step].label,
                       led_row_pins[high_idx].label, led_row_pins[low_idx].label, p_usart3_msg);
-  (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 }
 
 /**
@@ -913,7 +969,7 @@ static void spi2_report(hal_uart_handle_t *huart)
   {
     len = snprintf(line, sizeof(line), "SPI2 test: sent 0x%02X, received: no data yet\r\n", spi2_tx_byte);
   }
-  (void)HAL_UART_Transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 }
 
 #endif /* !TEST_ADC_QUALITY */
@@ -962,20 +1018,32 @@ void SPI2_IRQHandler(void)
   */
 static void uart5_cmd_arm_receive(hal_uart_handle_t *huart5)
 {
+#if PC_COMM_USE_USB
+  (void)huart5;
+  /* Nothing to arm: USB CDC reception is handled entirely inside
+     usb_cdc.c's HAL_PCD_DataOutStageCallback(). */
+#else
   (void)HAL_UART_ReceiveToIdle_IT(huart5, uart5_cmd_rx_buf, UART5_CMD_RX_BUF_SIZE);
+#endif /* PC_COMM_USE_USB */
 }
 
 /**
-  * brief:  Block until the PC sends a line on UART5 (a "go ahead" for the next
-  *         acquisition step, or the reply to a SELECT_PROMPT), then copy it into
-  *         out_buf. Reception itself stays fully interrupt-driven (see
-  *         HAL_UART_RxCpltCallback() / UART5_IRQHandler()); this function only
-  *         busy-waits on the resulting flag, which is fine here since the ADC
-  *         quality test has nothing else to do while waiting for the operator.
+  * brief:  Block until the PC sends a line on the active link (UART5 or USB
+  *         CDC, see PC_COMM_USE_USB) - a "go ahead" for the next acquisition
+  *         step, or the reply to a SELECT_PROMPT - then copy it into out_buf.
+  *         In UART5 mode, reception itself stays fully interrupt-driven (see
+  *         HAL_UART_RxCpltCallback() / UART5_IRQHandler()); this function
+  *         only busy-waits on the resulting flag, which is fine here since
+  *         the ADC quality test has nothing else to do while waiting for the
+  *         operator. In USB mode, usb_cdc_wait_for_line() does the equivalent
+  *         (busy-waiting on its own interrupt-driven reception).
   * retval: none
   */
 static void uart5_cmd_wait_for_line(char *out_buf, uint32_t out_buf_size)
 {
+#if PC_COMM_USE_USB
+  usb_cdc_wait_for_line(out_buf, out_buf_size);
+#else
   size_t msg_len;
 
   while (uart5_cmd_ready == 0U)
@@ -990,6 +1058,7 @@ static void uart5_cmd_wait_for_line(char *out_buf, uint32_t out_buf_size)
   }
   memcpy(out_buf, uart5_cmd_last, msg_len);
   out_buf[msg_len] = '\0';
+#endif /* PC_COMM_USE_USB */
 }
 
 /**
@@ -1248,27 +1317,27 @@ static void adc_quality_send_config(hal_uart_handle_t *huart5)
   uart_send_string(huart5, "CONFIG_BEGIN\r\n");
 
   len = snprintf(line, sizeof(line), "firmware_build=%s %s\r\n", __DATE__, __TIME__);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   len = snprintf(line, sizeof(line), "test_id=%u\r\n", (unsigned int)ADC_QUALITY_TEST_ID);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   len = snprintf(line, sizeof(line), "adc_vref_mV=%u\r\n", (unsigned int)ADC_VREF_MV);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   len = snprintf(line, sizeof(line), "adc_resolution_bits=%u\r\n", (unsigned int)ADC_RESOLUTION_BITS);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   len = snprintf(line, sizeof(line), "adc_kernel_clock_Hz=%lu\r\n", (unsigned long)ADC_KERNEL_CLOCK_HZ);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   len = snprintf(line, sizeof(line), "adc_sampling_time_cycles=%u\r\n", (unsigned int)ADC_SAMPLING_TIME_CYCLES);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   /* Sent as a x10 integer (no float printf support with nano.specs); the PC
      side divides by 10 to get the usual "12.5 cycles" figure. */
   len = snprintf(line, sizeof(line), "adc_conv_cycles_x10=%u\r\n", (unsigned int)ADC_CONV_CYCLES_X10);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   /* How long one single-channel conversion actually takes, and the resulting
      max sample rate - both derived from the two lines above (sampling time +
@@ -1288,32 +1357,32 @@ static void adc_quality_send_config(hal_uart_handle_t *huart5)
     uint32_t max_rate_sps = (uint32_t)((10ULL * (uint64_t)ADC_KERNEL_CLOCK_HZ) / (uint64_t)ADC_TOTAL_CYCLES_X10);
 
     len = snprintf(line, sizeof(line), "adc_conv_time_ns=%lu\r\n", (unsigned long)conv_time_ns);
-    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+    (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
     len = snprintf(line, sizeof(line), "adc_max_sample_rate_sps=%lu\r\n", (unsigned long)max_rate_sps);
-    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+    (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
     len = snprintf(line, sizeof(line), "test_effective_sample_rate_adc1_sps=%lu\r\n",
                     (unsigned long)(max_rate_sps / ADC1_NB_CHANNELS));
-    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+    (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
     len = snprintf(line, sizeof(line), "test_effective_sample_rate_adc2_sps=%lu\r\n",
                     (unsigned long)(max_rate_sps / ADC2_NB_CHANNELS));
-    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+    (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
   }
 
   /* atten_factor = atten_factor_num / atten_factor_den (e.g. 10000/2875 = 0.2875) */
   len = snprintf(line, sizeof(line), "atten_factor_num=%lu\r\n", (unsigned long)ATTEN_FACTOR_NUM);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   len = snprintf(line, sizeof(line), "atten_factor_den=%lu\r\n", (unsigned long)ATTEN_FACTOR_DEN);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   len = snprintf(line, sizeof(line), "samples_per_point=%lu\r\n", (unsigned long)ADC_QUALITY_SAMPLES_PER_POINT);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   len = snprintf(line, sizeof(line), "uart_baud=%lu\r\n", (unsigned long)MX_UART5_BAUD_RATE);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   /* voltages_v=0,2,4,6,8,10 */
   len = snprintf(line, sizeof(line), "voltages_v=");
@@ -1323,7 +1392,7 @@ static void adc_quality_send_config(hal_uart_handle_t *huart5)
                      (i == 0U) ? "" : ",", (unsigned long)adc_quality_voltages_v[i]);
   }
   len += snprintf(&line[len], sizeof(line) - (size_t)len, "\r\n");
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   /* channels=ADC1:PA0,ADC1:PA1,...,ADC2:PB1 */
   len = snprintf(line, sizeof(line), "channels=");
@@ -1335,16 +1404,16 @@ static void adc_quality_send_config(hal_uart_handle_t *huart5)
                      adc_quality_channels[i].pin_label);
   }
   len += snprintf(&line[len], sizeof(line) - (size_t)len, "\r\n");
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   /* Remote 4-20mA current-loop channels, read from the other board over SPI2
      (see adc_current_read_channel()); raw codes are converted to a current
      using Ohm's law over this shunt resistor. */
   len = snprintf(line, sizeof(line), "current_channel_count=%u\r\n", (unsigned int)ADC_CURRENT_CHANNEL_COUNT);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   len = snprintf(line, sizeof(line), "current_shunt_ohm=%u\r\n", (unsigned int)ADC_CURRENT_SHUNT_OHM);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   /* current_nominal_mA=4,8,12,16,20 */
   len = snprintf(line, sizeof(line), "current_nominal_mA=");
@@ -1354,7 +1423,7 @@ static void adc_quality_send_config(hal_uart_handle_t *huart5)
                      (i == 0U) ? "" : ",", (unsigned long)adc_current_nominal_ma[i]);
   }
   len += snprintf(&line[len], sizeof(line) - (size_t)len, "\r\n");
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   uart_send_string(huart5, "CONFIG_END\r\n");
 }
@@ -1419,7 +1488,7 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
 
       len = snprintf(line, sizeof(line), "READY,ADC%u,%s,%luV\r\n",
                       (unsigned int)p_ch->adc_number, p_ch->pin_label, (unsigned long)voltage_v);
-      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
       /* Operator sets up the reference voltage on this channel, then confirms
          from the PC script; content is irrelevant here, only its arrival matters. */
@@ -1428,7 +1497,7 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
       len = snprintf(line, sizeof(line), "START,ADC%u,%s,%luV,%lu\r\n",
                       (unsigned int)p_ch->adc_number, p_ch->pin_label, (unsigned long)voltage_v,
                       (unsigned long)ADC_QUALITY_SAMPLES_PER_POINT);
-      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
       for (sample = 0U; sample < ADC_QUALITY_SAMPLES_PER_POINT; sample++)
       {
@@ -1445,12 +1514,12 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
                         (long)adc_results[p_ch->channel_idx].raw,
                         (long)adc_results[p_ch->channel_idx].adc_mv,
                         (long)adc_results[p_ch->channel_idx].input_mv);
-        (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+        (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
       }
 
       len = snprintf(line, sizeof(line), "END,ADC%u,%s,%luV\r\n",
                       (unsigned int)p_ch->adc_number, p_ch->pin_label, (unsigned long)voltage_v);
-      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
     }
   }
 
@@ -1470,7 +1539,7 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
 
       len = snprintf(line, sizeof(line), "READY,CURRENT,CH%lu,%lumA\r\n",
                       (unsigned long)ch, (unsigned long)current_ma);
-      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
       /* Operator sets up the loop current on this channel, then confirms
          from the PC script; content is irrelevant here, only its arrival matters. */
@@ -1479,7 +1548,7 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
       len = snprintf(line, sizeof(line), "START,CURRENT,CH%lu,%lumA,%lu\r\n",
                       (unsigned long)ch, (unsigned long)current_ma,
                       (unsigned long)ADC_QUALITY_SAMPLES_PER_POINT);
-      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
       for (sample = 0U; sample < ADC_QUALITY_SAMPLES_PER_POINT; sample++)
       {
@@ -1498,16 +1567,16 @@ static void adc_quality_run_test_1(hal_uart_handle_t *huart5, hal_adc_handle_t *
 
         len = snprintf(line, sizeof(line), "%lu,%ld,%ld,%ld\r\n",
                         (unsigned long)sample, (long)raw, (long)adc_mv, (long)current_ua);
-        (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+        (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
       }
 
       len = snprintf(line, sizeof(line), "END,CURRENT,CH%lu,%lumA\r\n",
                       (unsigned long)ch, (unsigned long)current_ma);
-      (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+      (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
     }
   }
 
-  (void)HAL_UART_Transmit(huart5, "ALL_DONE\r\n", 10U, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, "ALL_DONE\r\n", 10U, UART_TX_TIMEOUT_MS);
 }
 
 /**
@@ -1561,7 +1630,7 @@ static void adc_quality_run_dynamic(hal_uart_handle_t *huart5, hal_adc_handle_t 
 
   len = snprintf(line, sizeof(line), "READY,DYNAMIC,%s,%s,%lums\r\n",
                   device_label, pin_label, (unsigned long)duration_ms);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   /* Operator gets ready (e.g. to trigger whatever external event they want
      to capture), then confirms from the PC script; content is irrelevant
@@ -1570,7 +1639,7 @@ static void adc_quality_run_dynamic(hal_uart_handle_t *huart5, hal_adc_handle_t 
 
   len = snprintf(line, sizeof(line), "START,DYNAMIC,%s,%s,%lums\r\n",
                   device_label, pin_label, (unsigned long)duration_ms);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
   sample = 0U;
   start_tick = HAL_GetTick();
@@ -1607,15 +1676,15 @@ static void adc_quality_run_dynamic(hal_uart_handle_t *huart5, hal_adc_handle_t 
                       (long)adc_results[local_ch_idx].adc_mv,
                       (long)adc_results[local_ch_idx].input_mv);
     }
-    (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+    (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
     sample++;
   }
 
   len = snprintf(line, sizeof(line), "END,DYNAMIC,%s,%s,%lums,%lu\r\n",
                   device_label, pin_label, (unsigned long)duration_ms, (unsigned long)sample);
-  (void)HAL_UART_Transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, line, (uint32_t)len, UART_TX_TIMEOUT_MS);
 
-  (void)HAL_UART_Transmit(huart5, "ALL_DONE\r\n", 10U, UART_TX_TIMEOUT_MS);
+  (void)pc_transmit(huart5, "ALL_DONE\r\n", 10U, UART_TX_TIMEOUT_MS);
 }
 
 #endif /* TEST_ADC_QUALITY */

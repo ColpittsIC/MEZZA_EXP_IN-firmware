@@ -11,6 +11,8 @@ Il firmware esegue quattro test hardware in loop, riportando i risultati via UAR
 
 Esiste inoltre una **modalità di build separata**, selezionata dal flag `TEST_ADC_QUALITY` in cima a `main.c` (0 = firmware normale sopra, 1 = procedura di qualifica ADC pilotata da uno script Python, che sostituisce interamente il loop normale). Oltre ai 10 canali locali, questa modalità legge anche 8 canali di corrente 4-20mA dell'altra scheda tramite SPI2. Vedi [`adc_quality_test/README.md`](adc_quality_test/README.md).
 
+Un secondo flag, `PC_COMM_USE_USB` (anch'esso in cima a `main.c`, indipendente da `TEST_ADC_QUALITY`), sceglie **quale link usa questa scheda per parlare con il PC** - vedi la sezione "USB (Virtual COM Port)" più sotto.
+
 ## Hardware
 
 ### Ingressi ADC (10 canali)
@@ -40,6 +42,23 @@ Tutti i risultati dei test vengono stampati come testo su **UART5**:
 - RX: PB5
 - Baud rate: **921600**, 8N1, nessun controllo di flusso (`MX_UART5_BAUD_RATE` in `generated/hal/mx_uart5.h` — unico punto da cambiare se serve un'altra velocità; ricordati di aggiornare anche il terminale che usi per leggerla)
 - RX è usata solo in modalità `TEST_ADC_QUALITY` (vedi sotto), per ricevere i comandi dallo script Python; nel firmware normale la UART5 è usata solo in trasmissione.
+- Usata solo quando `PC_COMM_USE_USB = 0` (default) - vedi sotto per l'alternativa USB.
+
+### USB (Virtual COM Port) - alternativa alla UART5
+
+Il microcontrollore ha una USB Full-Speed nativa su **PA11 (D-) e PA12 (D+)** (pin dedicati, nessuna configurazione AF necessaria), e questa scheda ha un connettore USB collegato lì. Il flag `PC_COMM_USE_USB` in cima a `main.c` sceglie quale dei due link questa scheda usa per parlare con il PC - **sia nel firmware normale sia in `TEST_ADC_QUALITY`**, indipendentemente da quel flag:
+
+- `PC_COMM_USE_USB = 0` (default): UART5, come sopra.
+- `PC_COMM_USE_USB = 1`: USB CDC-ACM (Virtual COM Port) - la scheda appare al PC come una normale porta COM, senza bisogno di un adattatore USB-seriale esterno. Tutto il codice che già esisteva per UART5 resta al suo posto e viene comunque compilato (`pc_transmit()`, `uart5_cmd_arm_receive()`/`uart5_cmd_wait_for_line()` in `main.c`): questo flag decide solo quale dei due main() usa davvero, non quale viene rimosso.
+
+Requisiti hardware per la USB: un cristallo esterno **da 48 MHz esatti su PH0(OSC_IN)/PH1(OSC_OUT)** (HSE) - necessario perché il clock USB Full-Speed (CK48) richiede una precisione che l'oscillatore interno (HSI) usato per il SYSCLK non garantisce; con un cristallo esattamente a 48 MHz, CK48 viene preso direttamente da HSE, senza bisogno di PLL o divisori (vedi `mx_rcc.c`). Questa scheda non ha un pin dedicato per il VBUS sensing: il firmware assume semplicemente che la USB sia alimentata ogni volta che il microcontrollore stesso è acceso.
+
+Non essendoci un pacchetto USB Device middleware pronto per questo MCU/toolchain (a differenza dei driver HAL di UART/SPI, che bastava abilitare), la classe CDC-ACM è implementata a mano in `usb_cdc.c`/`usb_cdc.h`, direttamente sopra il driver `stm32c5xx_hal_pcd.c` (descrittori USB, richieste di controllo, endpoint bulk/interrupt) - vedi i commenti in cima a quel file per il dettaglio architetturale. `generated/hal/mx_usb.c`/`.h` (inizializzazione base del solo peripheral USB, stesso pattern di `mx_spi2.c`) e `usb_cdc.c`/`.h` sono referenziati a mano in `cmake/files.cmake`, come già USART3/SPI2 (vedi sotto).
+
+- Endpoint usati: EP0 controllo (enumerazione), EP1 IN interrupt (notifiche CDC, dichiarato per conformità alla spec ma non usato attivamente da questo test), EP2 OUT bulk (host -> scheda), **EP3 IN bulk** (scheda -> host) - vedi `mx_usb.h`.
+- **Nota importante** (bug reale trovato e risolto durante lo sviluppo): l'endpoint bulk IN e quello bulk OUT usano deliberatamente **due numeri fisici di endpoint diversi** (2 e 3), invece di condividere lo stesso numero per le due direzioni (schema comune e in teoria altrettanto valido). Con lo stesso numero fisico per entrambe le direzioni (EP2 IN + EP2 OUT), l'interrupt di fine trasmissione (`HAL_PCD_DataInStageCallback`) sul lato IN non arrivava mai su questo specifico driver, causando dati persi o corrotti in trasmissione (verificato con test diretti, indipendentemente da come viene gestito lo stato dell'endpoint) - separare i due numeri fisici ha risolto il problema.
+
+> Nota: il primo messaggio di boot può non arrivare se inviato prima che il PC finisca l'enumerazione USB (qualche decina di ms dopo l'accensione/collegamento del cavo) - tutto ciò che viene mandato dopo (una volta che un terminale/script ha aperto la porta) arriva regolarmente. Lato PC, gli script in `adc_quality_test/` funzionano automaticamente anche su questa porta: basta passare il nome della porta COM assegnata invece di quella dell'adattatore USB-seriale (il baud rate passato allo script non ha effetto, la USB non ha un vero baud rate).
 
 ### LED - Charlieplexing (10 LED, 4 pin di pilotaggio)
 
@@ -182,6 +201,8 @@ Progetto generato con STM32CubeMX (nuovo modello di generazione basato su CMake)
 - `generated/hal/mx_uart5.c` — inizializzazione UART5 (generata da CubeMX, non modificata).
 - `generated/hal/mx_usart3.c` — inizializzazione USART3 (scritta a mano, non essendo stata selezionata nel progetto CubeMX originale; per questo è referenziata direttamente in `cmake/files.cmake` invece che nel meccanismo di generazione CMSIS-pack).
 - `generated/hal/mx_spi2.c` — inizializzazione SPI2 Master (scritta a mano, stesso motivo di USART3 sopra; anche il driver `stm32c5xx_hal_spi.c` è referenziato a mano in `cmake/files.cmake` per lo stesso motivo).
+- `generated/hal/mx_usb.c` — inizializzazione base del peripheral USB (PCD, modalità Device: clock, PMA degli endpoint, NVIC), stesso motivo/pattern di USART3/SPI2 sopra; anche `stm32c5xx_hal_pcd.c` e `stm32c5xx_usb_drd_core.c` sono referenziati a mano in `cmake/files.cmake`.
+- `usb_cdc.c` / `usb_cdc.h` — classe USB CDC-ACM (Virtual COM Port) scritta a mano sopra `mx_usb.c`, usata quando `PC_COMM_USE_USB = 1` (vedi sopra); anche questi referenziati a mano in `cmake/files.cmake`.
 - `stm32c5xx_drivers/` — driver HAL/LL STM32C5 (libreria ST, non modificare).
 - `stm32c5xx_dfp/`, `arch/cmsis/` — CMSIS e device support pack STM32C5 (libreria ST, non modificare).
 - `cmake/`, `CMakeLists.txt`, `CMakePresets.json` — configurazione build CMake.

@@ -63,7 +63,9 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="MEZZA_EXP_IN ADC dynamic (duration-bounded, single-channel) acquisition")
     parser.add_argument("port", help="Serial port connected to UART5 (e.g. COM5 or /dev/ttyUSB0)")
-    parser.add_argument("--baud", type=int, default=DEFAULT_BAUD, help=f"Baud rate (default: {DEFAULT_BAUD})")
+    parser.add_argument("--baud", type=int, default=DEFAULT_BAUD,
+                         help=f"Baud rate (default: {DEFAULT_BAUD}); ignored if the board uses "
+                              f"PC_COMM_USE_USB=1 (USB CDC has no real baud rate)")
     parser.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR,
                          help=f"Folder where the CSV file is saved (default: {DEFAULT_OUTDIR})")
     parser.add_argument("--duration", type=float, required=True,

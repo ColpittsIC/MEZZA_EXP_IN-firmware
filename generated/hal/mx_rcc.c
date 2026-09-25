@@ -48,6 +48,17 @@ system_status_t mx_rcc_init(void)
     return SYSTEM_CLOCK_ERROR;
   }
 
+  /* External 48 MHz crystal on PH0(OSC_IN)/PH1(OSC_OUT) - not used for the
+     main SYSCLK (still purely HSI/PSI-based below), only as the reference
+     for the USB Full-Speed CK48 clock (see mx_rcc_peripherals_clock_config()
+     and mx_usb.c). Enabled unconditionally, like the other peripheral clocks
+     in this file - harmless if USB isn't actually used at the application
+     level (see PC_COMM_USE_USB in main.c). */
+  if (HAL_RCC_HSE_Enable(HAL_RCC_HSE_ON) != HAL_OK)
+  {
+    return SYSTEM_CLOCK_ERROR;
+  }
+
     hal_rcc_psi_config_t config_psi;
   config_psi.psi_source = HAL_RCC_PSI_SRC_HSI_8MHz;
   config_psi.psi_ref = HAL_RCC_PSI_REF_8MHZ;
@@ -118,6 +129,16 @@ system_status_t mx_rcc_peripherals_clock_config(void)
     ADC2
   */
   if (HAL_RCC_ADCDAC_SetKernelClkPrescaler(HAL_RCC_ADCDAC_PRESCALER4) != HAL_OK)
+  {
+    return SYSTEM_CLOCK_ERROR;
+  }
+
+  /* CK48 (48 MHz) is used by USB (see mx_usb.c) - sourced directly from the
+     48 MHz HSE crystal (exact match, no division/multiplication needed),
+     rather than PSI/3 or HSI/3, since HSE is a real crystal and therefore
+     accurate enough for USB Full-Speed timing (the internal-only HSI/PSI
+     path is not). */
+  if (HAL_RCC_CK48_SetKernelClkSource(HAL_RCC_CK48_CLK_SRC_HSE) != HAL_OK)
   {
     return SYSTEM_CLOCK_ERROR;
   }

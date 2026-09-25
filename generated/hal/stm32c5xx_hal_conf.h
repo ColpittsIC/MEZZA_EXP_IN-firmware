@@ -453,7 +453,7 @@ extern "C" {
   * @{
   */
 /* ########################## HAL_PCD Config #################################### */
-#define USE_HAL_PCD_MODULE                      0U
+#define USE_HAL_PCD_MODULE                      1U
 #define USE_HAL_PCD_REGISTER_CALLBACKS          0U
 #define USE_HAL_PCD_USER_DATA                   0U
 #define USE_HAL_PCD_GET_LAST_ERRORS             0U

@@ -36,6 +36,7 @@ extern "C" {
 #include "mx_spi2.h"
 #include "mx_uart5.h"
 #include "mx_usart3.h"
+#include "mx_usb.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

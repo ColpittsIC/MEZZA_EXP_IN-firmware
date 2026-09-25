@@ -60,7 +60,9 @@ DEFAULT_OUTDIR = Path(__file__).resolve().parent / "data"
 def parse_args():
     parser = argparse.ArgumentParser(description="MEZZA_EXP_IN ADC quality test controller")
     parser.add_argument("port", help="Serial port connected to UART5 (e.g. COM5 or /dev/ttyUSB0)")
-    parser.add_argument("--baud", type=int, default=DEFAULT_BAUD, help=f"Baud rate (default: {DEFAULT_BAUD})")
+    parser.add_argument("--baud", type=int, default=DEFAULT_BAUD,
+                         help=f"Baud rate (default: {DEFAULT_BAUD}); ignored if the board uses "
+                              f"PC_COMM_USE_USB=1 (USB CDC has no real baud rate)")
     parser.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR,
                          help=f"Folder where the CSV files are saved (default: {DEFAULT_OUTDIR})")
 
